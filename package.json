@@ -8,7 +8,8 @@
   "license": "MIT",
   "scripts": {
     "test": "bun test",
-    "build": "bun build --compile src/cli.ts --outfile dist/ttm",
+    "generate-builtin": "bun run scripts/generate-builtin.ts",
+    "build": "bun run generate-builtin && bun build --compile src/cli.ts --outfile dist/ttm",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

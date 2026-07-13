@@ -15,3 +15,10 @@ jobs:
       - run: bun test
       - run: bun run typecheck
       - run: bun run build
+      - name: smoke-test compiled binary
+        run: |
+          set -euo pipefail
+          output="$(./dist/ttm --help)"
+          echo "$output"
+          [ -n "$output" ]
+          echo "$output" | grep -q "ttm apply"
