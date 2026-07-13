@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import type { Backend } from "./backend";
 import type { Theme } from "./theme";
 
