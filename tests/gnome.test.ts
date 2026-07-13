@@ -1,0 +1,97 @@
+// tests/gnome.test.ts
+import { expect, test } from "bun:test";
+import { createGnomeBackend } from "../src/gnome";
+import type { Theme } from "../src/theme";
+
+const theme: Theme = {
+  name: "Nord",
+  background: "#2e3440",
+  foreground: "#d8dee9",
+  palette: Array.from({ length: 16 }, () => "#81a1c1"),
+};
+
+const UUID_A = "c0100de0-0000-4000-8000-000000000001";
+const UUID_B = "b1dcc9dd-5262-4d8d-a863-c897e6d979b9";
+
+/** run fake: devolve saída canned por comando e grava tudo que foi chamado. */
+function fakeRun(responses: Record<string, string>) {
+  const calls: string[][] = [];
+  const run = async (cmd: string[]): Promise<string> => {
+    calls.push(cmd);
+    const key = cmd.join(" ");
+    for (const [pattern, output] of Object.entries(responses)) {
+      if (key.startsWith(pattern)) return output;
+    }
+    return "";
+  };
+  return { run, calls };
+}
+
+const LIST = {
+  "gsettings get org.gnome.Terminal.ProfilesList list": `['${UUID_A}', '${UUID_B}']\n`,
+  "gsettings get org.gnome.Terminal.ProfilesList default": `'${UUID_A}'\n`,
+  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Nord'\n",
+  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_B}/visible-name`]: "\n",
+};
+
+test("list parses dconf quoting and names the unnamed profile", async () => {
+  const { run } = fakeRun(LIST);
+  expect(await createGnomeBackend(run).list()).toEqual(["Nord", "(original profile)"]);
+});
+
+test("list handles names with spaces and accents", async () => {
+  const { run } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'Solarized Café'\n",
+  });
+  expect(await createGnomeBackend(run).list()).toContain("Solarized Café");
+});
+
+test("current returns the default profile name", async () => {
+  const { run } = fakeRun(LIST);
+  expect(await createGnomeBackend(run).current()).toBe("Nord");
+});
+
+test("apply on an existing profile points default at it and creates nothing", async () => {
+  const { run, calls } = fakeRun(LIST);
+  await createGnomeBackend(run).apply(theme);
+
+  const written = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
+  expect(written.some((c) => c[2]?.includes("visible-name"))).toBe(false);
+
+  const setDefault = calls.find(
+    (c) => c[0] === "gsettings" && c[1] === "set" && c[3] === "default",
+  );
+  expect(setDefault?.[4]).toBe(`'${UUID_A}'`);
+});
+
+test("apply on a missing profile creates it, writes the colors, and adds it to the list", async () => {
+  const { run, calls } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+  });
+  await createGnomeBackend(run).apply(theme);
+
+  const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
+  const written = (suffix: string) => writes.find((c) => c[2]?.endsWith(suffix))?.[3];
+
+  expect(written("/visible-name")).toBe("'Nord'");
+  expect(written("/background-color")).toBe("'#2e3440'");
+  expect(written("/foreground-color")).toBe("'#d8dee9'");
+  expect(written("/use-theme-colors")).toBe("false");
+  expect(written("/palette")).toContain("'#81a1c1'");
+
+  const setList = calls.find(
+    (c) => c[0] === "gsettings" && c[1] === "set" && c[3] === "list",
+  );
+  expect(setList?.[4]).toContain(UUID_A);
+  expect(setList?.[4]).toContain(UUID_B);
+});
+
+test("a failing command becomes an exception, not a silent success", async () => {
+  const run = async () => {
+    throw new Error("dconf: permission denied");
+  };
+  await expect(createGnomeBackend(run).list()).rejects.toThrow(/permission denied/);
+});
