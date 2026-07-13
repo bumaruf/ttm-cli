@@ -1,4 +1,6 @@
 import { parseColor, type Hex } from "./color";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 export interface Theme {
   name: string;
@@ -66,14 +68,15 @@ export function parseTheme(source: string, filename: string): Theme {
 }
 
 export async function loadThemes(dir: string): Promise<Theme[]> {
-  const { readdir } = await import("node:fs/promises");
-  const { join } = await import("node:path");
-
   let entries: string[];
   try {
     entries = await readdir(dir);
-  } catch {
-    return [];
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === "ENOENT") {
+      return [];
+    }
+    throw new Error(`failed to read themes from ${dir}: ${err.message}`);
   }
 
   const files = entries.filter((f) => f.endsWith(".toml")).sort();

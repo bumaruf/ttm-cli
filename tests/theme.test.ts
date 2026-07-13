@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { parseTheme, loadThemes } from "../src/theme";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile, chmod } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -78,4 +78,20 @@ test("duplicate theme names are rejected", async () => {
   await writeFile(join(dir, "a.toml"), toml());
   await writeFile(join(dir, "b.toml"), toml());
   await expect(loadThemes(dir)).rejects.toThrow(/duplicate/);
+});
+
+test("permission denied on unreadable directory is rejected", async () => {
+  // Skip if running as root (root can read 0o000 directories)
+  if (process.getuid?.() === 0) {
+    return;
+  }
+
+  const dir = await mkdtemp(join(tmpdir(), "ttm-"));
+  try {
+    await chmod(dir, 0o000);
+    await expect(loadThemes(dir)).rejects.toThrow(/failed to read themes from.*EACCES|permission/i);
+  } finally {
+    // Restore permissions for cleanup
+    await chmod(dir, 0o755);
+  }
 });
