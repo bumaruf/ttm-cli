@@ -58,7 +58,12 @@ export async function runCli(
         for (const t of themes) out(`  ${t.name}`);
         return 1;
       }
-      await backend.apply(theme);
+      try {
+        await backend.apply(theme);
+      } catch (error) {
+        out(`error: could not apply theme (${(error as Error).message})`);
+        return 1;
+      }
       out(`applied ${theme.name} (new windows will use it)`);
       return 0;
     }
