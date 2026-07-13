@@ -12,15 +12,94 @@ const CURSOR_SHOW = "\x1b[?25h";
 const CLEAR = "\x1b[2J\x1b[H";
 
 export function parseKey(chunk: string): Key | null {
-  if (chunk === "\x1b[A") return { name: "up" };
-  if (chunk === "\x1b[B") return { name: "down" };
-  if (chunk === "\r" || chunk === "\n") return { name: "enter" };
-  if (chunk === "\x1b" || chunk === "\x03") return { name: "escape" };
-  if (chunk === "\x7f" || chunk === "\b") return { name: "backspace" };
-  if (chunk.length === 1 && chunk >= " " && chunk !== "\x7f") {
-    return { name: "char", value: chunk };
+  const keys = parseKeys(chunk);
+  return keys.length === 1 ? keys[0]! : null;
+}
+
+/**
+ * Incrementally parse a raw stdin chunk into zero or more keys.
+ *
+ * A single stdin chunk can contain multiple keypresses at once — this
+ * happens when the user holds down an arrow key (terminal repeat
+ * coalescing), pastes text, types fast, or when stdin is piped/non-TTY.
+ * The old single-key `parseKey` returned null for any chunk that wasn't
+ * exactly one recognized sequence, silently dropping every key in it. This
+ * drains the chunk left to right, emitting one Key per recognized
+ * sequence and skipping unrecognized bytes so one bad byte never discards
+ * the rest of the chunk.
+ */
+export function parseKeys(chunk: string): Key[] {
+  const keys: Key[] = [];
+  let i = 0;
+
+  while (i < chunk.length) {
+    const c = chunk[i]!;
+
+    if (c === "\x1b") {
+      // CSI sequence: ESC [ <letter-or-unknown>
+      if (chunk[i + 1] === "[") {
+        if (i + 2 >= chunk.length) {
+          // Chunk ends mid-escape-sequence (e.g. trailing "\x1b["). We
+          // cannot know what the next byte would have been, so treat the
+          // dangling prefix as a bare Esc press rather than buffering
+          // across chunks or emitting junk chars.
+          keys.push({ name: "escape" });
+          i = chunk.length;
+          continue;
+        }
+        const final = chunk[i + 2]!;
+        if (final === "A") {
+          keys.push({ name: "up" });
+          i += 3;
+          continue;
+        }
+        if (final === "B") {
+          keys.push({ name: "down" });
+          i += 3;
+          continue;
+        }
+        // Unknown CSI sequence, e.g. "\x1b[5~". Consume through the final
+        // byte (letter or '~') without emitting a key.
+        let j = i + 2;
+        while (j < chunk.length && !/[A-Za-z~]/.test(chunk[j]!)) j++;
+        i = j < chunk.length ? j + 1 : chunk.length;
+        continue;
+      }
+      // Bare ESC not followed by a recognized CSI sequence.
+      keys.push({ name: "escape" });
+      i += 1;
+      continue;
+    }
+
+    if (c === "\r" || c === "\n") {
+      keys.push({ name: "enter" });
+      i += 1;
+      continue;
+    }
+
+    if (c === "\x03") {
+      keys.push({ name: "escape" });
+      i += 1;
+      continue;
+    }
+
+    if (c === "\x7f" || c === "\b") {
+      keys.push({ name: "backspace" });
+      i += 1;
+      continue;
+    }
+
+    if (c >= " " && c !== "\x7f") {
+      keys.push({ name: "char", value: c });
+      i += 1;
+      continue;
+    }
+
+    // Unrecognized byte: skip it, keep draining the rest of the chunk.
+    i += 1;
   }
-  return null;
+
+  return keys;
 }
 
 const write = (s: string) => process.stdout.write(s);
@@ -97,10 +176,17 @@ export async function runTui(
     draw();
 
     for await (const chunk of process.stdin) {
-      const key = parseKey(String(chunk));
-      if (!key) continue;
+      const keys = parseKeys(String(chunk));
 
-      state = reduce(state, key);
+      // Apply every key from this chunk in order, but stop the moment one
+      // of them sets state.exit — a key typed after the exit key must
+      // never overtake it.
+      for (const key of keys) {
+        state = reduce(state, key);
+        if (state.exit) break;
+      }
+
+      draw();
 
       if (state.exit) {
         const { apply, resetColors: reset } = state.exit;
@@ -108,8 +194,6 @@ export async function runTui(
         teardown(reset);
         return apply;
       }
-
-      draw();
     }
 
     teardown(true);
