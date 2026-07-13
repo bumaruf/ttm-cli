@@ -6,39 +6,18 @@
 //
 // Run via `bun run scripts/generate-builtin.ts` — wired into `bun run build`.
 
-import { readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseTheme, type Theme } from "../src/theme";
+import { loadThemes } from "../src/theme";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const themesDir = join(root, "themes");
 const outFile = join(root, "src", "builtin-themes.ts");
 
 async function main() {
-  const entries = await readdir(themesDir);
-  const files = entries.filter((f) => f.endsWith(".toml")).sort();
-
-  const themes: Theme[] = [];
-  const seen = new Map<string, string>();
-
-  for (const file of files) {
-    const source = await Bun.file(join(themesDir, file)).text();
-    // Reuses the same parseTheme() validation as loadThemes(), so a
-    // malformed theme can never be embedded in the binary.
-    const theme = parseTheme(source, file);
-    const key = theme.name.toLowerCase();
-    const previous = seen.get(key);
-    if (previous) {
-      throw new Error(
-        `duplicate theme name "${theme.name}" in ${file} and ${previous}`,
-      );
-    }
-    seen.set(key, file);
-    themes.push(theme);
-  }
-
-  themes.sort((a, b) => a.name.localeCompare(b.name));
+  // Reuses loadThemes() (readdir, .toml filter, parse, dup-check, sort) so
+  // the embedded catalogue and the on-disk catalogue can never drift apart.
+  const themes = await loadThemes(themesDir);
 
   const body = JSON.stringify(themes, null, 2);
 

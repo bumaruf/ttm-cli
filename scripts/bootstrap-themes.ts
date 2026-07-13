@@ -3,10 +3,9 @@
 // Lê os perfis do GNOME Terminal e escreve themes/<slug>.toml para cada um.
 import { mkdir } from "node:fs/promises";
 import { parseColor } from "../src/color";
-import { realRun } from "../src/gnome";
+import { parseList, realRun, unquote } from "../src/gnome";
 
 const BASE = "/org/gnome/terminal/legacy/profiles:";
-const unquote = (v: string) => v.trim().replace(/^'|'$/g, "");
 
 const slug = (name: string) =>
   name
@@ -19,14 +18,9 @@ const slug = (name: string) =>
 const read = async (uuid: string, key: string): Promise<string> =>
   (await realRun(["dconf", "read", `${BASE}/:${uuid}/${key}`])).trim();
 
-const uuids = (
-  await realRun(["gsettings", "get", "org.gnome.Terminal.ProfilesList", "list"])
-)
-  .trim()
-  .replace(/^\[|\]$/g, "")
-  .split(",")
-  .map(unquote)
-  .filter(Boolean);
+const uuids = parseList(
+  await realRun(["gsettings", "get", "org.gnome.Terminal.ProfilesList", "list"]),
+).filter(Boolean);
 
 await mkdir("themes", { recursive: true });
 
@@ -41,10 +35,7 @@ for (const uuid of uuids) {
     continue;
   }
 
-  const palette = paletteRaw
-    .replace(/^\[|\]$/g, "")
-    .split(",")
-    .map((entry) => parseColor(unquote(entry)));
+  const palette = parseList(paletteRaw).map((entry) => parseColor(entry));
 
   if (palette.length !== 16) {
     console.log(`skipping ${name}: palette has ${palette.length} colors`);
