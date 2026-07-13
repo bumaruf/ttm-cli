@@ -1,0 +1,8 @@
+# superpowers / specs / ferramentas de agente — nunca versionar
+docs/superpowers/
+docs/specs/
+.claude/
+
+node_modules/
+dist/
+*.log
