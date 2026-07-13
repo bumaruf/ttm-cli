@@ -1,11 +1,15 @@
 # ttm
 
+> ⚠️ TODO: replace `OWNER_PLACEHOLDER` below with the real GitHub username/org
+> once this repo is pushed to GitHub. It could not be inferred automatically:
+> this checkout has no `git remote` configured.
+
 <!--
-Badge URLs assume the repo lives at github.com/<GITHUB_USER>/ttm.
-Replace <GITHUB_USER> below once the repo is pushed, or delete the badges.
+Badge URLs assume the repo lives at github.com/OWNER_PLACEHOLDER/ttm.
+Replace OWNER_PLACEHOLDER below once the repo is pushed, or delete the badges.
 -->
 
-[![CI](https://github.com/<GITHUB_USER>/ttm/actions/workflows/ci.yml/badge.svg)](https://github.com/<GITHUB_USER>/ttm/actions/workflows/ci.yml)
+[![CI](https://github.com/OWNER_PLACEHOLDER/ttm/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER_PLACEHOLDER/ttm/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/ttm.svg)](https://www.npmjs.com/package/ttm)
 
 A TUI for picking a GNOME Terminal color theme — the window running it is the preview.
@@ -32,7 +36,7 @@ Not yet published. The intended ways to install, once the release tasks land:
 npm i -g ttm
 
 # prebuilt binary (GitHub Releases)
-curl -fsSL https://github.com/<GITHUB_USER>/ttm/releases/latest/download/ttm-linux-x64 -o ttm
+curl -fsSL https://github.com/OWNER_PLACEHOLDER/ttm/releases/latest/download/ttm-linux-x64 -o ttm
 chmod +x ttm
 sudo mv ttm /usr/local/bin/ttm
 
