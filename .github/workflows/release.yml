@@ -18,10 +18,16 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun test
       - run: bun run build
+      - name: Build .deb
+        run: |
+          chmod +x packaging/deb/build.sh
+          packaging/deb/build.sh "${GITHUB_REF_NAME#v}"
       - name: Attach binary to the release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/ttm
+          files: |
+            dist/ttm
+            ttm_*_amd64.deb
       - name: Publish to npm
         run: npm publish --provenance --access public
         env:
