@@ -102,7 +102,72 @@ export function parseKeys(chunk: string): Key[] {
   return keys;
 }
 
-const write = (s: string) => process.stdout.write(s);
+/**
+ * The terminal-I/O seam runTui talks through. Production code gets
+ * `defaultIo`, which reaches for the real `process.stdin`/`process.stdout`
+ * exactly as before this seam existed. Tests inject a fake implementation
+ * so runTui's control flow (key handling, draw/teardown sequencing, signal
+ * handling) can be exercised without touching a real terminal or process.
+ */
+export interface TuiIo {
+  /** Async-iterable source of raw input chunks (mirrors stdin's chunks). */
+  input: AsyncIterable<string | Buffer>;
+  /** Buffered write for the draw path. */
+  write(s: string): void;
+  /** Unbuffered, synchronous write for the teardown path. Must never throw. */
+  writeSync(s: string): void;
+  setRawMode(on: boolean): void;
+  size(): { columns: number; rows: number };
+  /** Register a handler for a termination signal; returns an unregister fn. */
+  onSignal(signal: "SIGINT" | "SIGTERM", handler: () => void): () => void;
+  /** Start consuming input (stdin.resume()/setEncoding() for the real io). */
+  start(): void;
+  /** Stop consuming input (stdin.pause() for the real io). */
+  stop(): void;
+}
+
+/**
+ * Write teardown bytes synchronously and unbuffered directly to the stdout
+ * file descriptor. Unlike process.stdout.write, writeSync blocks until the
+ * bytes are on the wire, so they are guaranteed to land before
+ * process.exit() can kill the process mid-flush. Must never throw: a closed
+ * or broken stdout (EBADF/EPIPE) during teardown must not prevent the rest
+ * of teardown (raw mode restore, stdin pause) from running.
+ */
+function writeTeardownFd1(s: string): void {
+  try {
+    writeSync(1, s);
+  } catch {
+    // stdout is gone (EBADF/EPIPE) or otherwise unwritable — teardown must
+    // never fail because of it.
+  }
+}
+
+export const defaultIo: TuiIo = {
+  input: process.stdin as unknown as AsyncIterable<string | Buffer>,
+  write: (s) => {
+    process.stdout.write(s);
+  },
+  writeSync: writeTeardownFd1,
+  setRawMode: (on) => {
+    if (process.stdin.isTTY) process.stdin.setRawMode(on);
+  },
+  size: () => {
+    const { columns = 80, rows = 24 } = process.stdout;
+    return { columns, rows };
+  },
+  onSignal: (signal, handler) => {
+    process.on(signal, handler);
+    return () => process.off(signal, handler);
+  },
+  start: () => {
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+  },
+  stop: () => {
+    process.stdin.pause();
+  },
+};
 
 /**
  * Compose the exact bytes teardown must emit, in order.
@@ -115,35 +180,19 @@ export function teardownSequence(resetColorsFlag: boolean): string {
   return (resetColorsFlag ? resetColors() : "") + CURSOR_SHOW + ALT_SCREEN_OFF;
 }
 
-/**
- * Write teardown bytes synchronously and unbuffered directly to the stdout
- * file descriptor. Unlike process.stdout.write, writeSync blocks until the
- * bytes are on the wire, so they are guaranteed to land before
- * process.exit() can kill the process mid-flush. Must never throw: a closed
- * or broken stdout (EBADF/EPIPE) during teardown must not prevent the rest
- * of teardown (raw mode restore, stdin pause) from running.
- */
-function writeTeardown(s: string): void {
-  try {
-    writeSync(1, s);
-  } catch {
-    // stdout is gone (EBADF/EPIPE) or otherwise unwritable — teardown must
-    // never fail because of it.
-  }
-}
-
 export async function runTui(
   themes: Theme[],
   backend: Backend,
+  io: TuiIo = defaultIo,
 ): Promise<Theme | null> {
   let torn = false;
 
   const teardown = (reset: boolean) => {
     if (torn) return;
     torn = true;
-    writeTeardown(teardownSequence(reset));
-    if (process.stdin.isTTY) process.stdin.setRawMode(false);
-    process.stdin.pause();
+    io.writeSync(teardownSequence(reset));
+    io.setRawMode(false);
+    io.stop();
   };
 
   // If we get killed, the terminal must return to normal — never leave a mess.
@@ -151,31 +200,30 @@ export async function runTui(
     teardown(true);
     process.exit(130);
   };
-  process.on("SIGINT", onSignal);
-  process.on("SIGTERM", onSignal);
+  const offSigint = io.onSignal("SIGINT", onSignal);
+  const offSigterm = io.onSignal("SIGTERM", onSignal);
 
   try {
-    if (process.stdin.isTTY) process.stdin.setRawMode(true);
-    process.stdin.resume();
-    process.stdin.setEncoding("utf8");
-    write(ALT_SCREEN_ON + CURSOR_HIDE);
+    io.setRawMode(true);
+    io.start();
+    io.write(ALT_SCREEN_ON + CURSOR_HIDE);
 
     let state: State = initialState(themes);
     let painted: Theme | null = null;
 
     const draw = () => {
-      const { columns = 80, rows = 24 } = process.stdout;
+      const { columns, rows } = io.size();
       const current = focused(state);
       if (current && current !== painted) {
-        write(applyTheme(current));
+        io.write(applyTheme(current));
         painted = current;
       }
-      write(CLEAR + render(state, columns, rows));
+      io.write(CLEAR + render(state, columns, rows));
     };
 
     draw();
 
-    for await (const chunk of process.stdin) {
+    for await (const chunk of io.input) {
       const keys = parseKeys(String(chunk));
 
       // Apply every key from this chunk in order, but stop the moment one
@@ -200,7 +248,7 @@ export async function runTui(
     return null;
   } finally {
     teardown(true);
-    process.off("SIGINT", onSignal);
-    process.off("SIGTERM", onSignal);
+    offSigint();
+    offSigterm();
   }
 }
