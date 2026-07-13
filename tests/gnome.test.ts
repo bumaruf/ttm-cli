@@ -95,3 +95,46 @@ test("a failing command becomes an exception, not a silent success", async () =>
   };
   await expect(createGnomeBackend(run).list()).rejects.toThrow(/permission denied/);
 });
+
+test("list unescapes a GVariant-quoted apostrophe in the name", async () => {
+  const { run } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'O\\'Brien'\n",
+  });
+  expect(await createGnomeBackend(run).list()).toContain("O'Brien");
+});
+
+test("apply on a theme named with an apostrophe writes a correctly escaped GVariant literal", async () => {
+  const apostropheTheme: Theme = { ...theme, name: "O'Brien" };
+  const { run, calls } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+  });
+  await createGnomeBackend(run).apply(apostropheTheme);
+
+  const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
+  const visibleName = writes.find((c) => c[2]?.endsWith("/visible-name"))?.[3];
+  expect(visibleName).toBe("'O\\'Brien'");
+});
+
+test("a name containing a backslash round-trips through quote/unquote", async () => {
+  const backslashTheme: Theme = { ...theme, name: "back\\slash" };
+  const { run, calls } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+  });
+  await createGnomeBackend(run).apply(backslashTheme);
+
+  const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
+  const visibleName = writes.find((c) => c[2]?.endsWith("/visible-name"))?.[3];
+  expect(visibleName).toBe("'back\\\\slash'");
+
+  // Round-trip: reading that same escaped literal back should unescape correctly.
+  const { run: readRun } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      `${visibleName}\n`,
+  });
+  expect(await createGnomeBackend(readRun).list()).toContain("back\\slash");
+});

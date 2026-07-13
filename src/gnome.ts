@@ -19,9 +19,15 @@ export const realRun: Run = async (cmd) => {
   return stdout;
 };
 
-/** `['a', 'b']` -> ['a', 'b'] ; `'a'` -> 'a' */
+/** Wrap a string as a GVariant literal, backslash-escaping `\` and `'`. */
+function quote(value: string): string {
+  return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+}
+
+/** Reverse of `quote`: strip surrounding quotes and unescape `\\` and `\'`. */
 function unquote(value: string): string {
-  return value.trim().replace(/^'|'$/g, "");
+  const trimmed = value.trim().replace(/^'|'$/g, "");
+  return trimmed.replace(/\\(\\|')/g, "$1");
 }
 
 function parseList(value: string): string[] {
@@ -66,20 +72,20 @@ export function createGnomeBackend(run: Run): Backend {
       if (!uuid) {
         uuid = crypto.randomUUID();
         const key = (k: string) => `${BASE}/:${uuid}/${k}`;
-        const palette = `[${theme.palette.map((c) => `'${c}'`).join(", ")}]`;
+        const palette = `[${theme.palette.map((c) => quote(c)).join(", ")}]`;
 
-        await run(["dconf", "write", key("visible-name"), `'${theme.name}'`]);
-        await run(["dconf", "write", key("background-color"), `'${theme.background}'`]);
-        await run(["dconf", "write", key("foreground-color"), `'${theme.foreground}'`]);
+        await run(["dconf", "write", key("visible-name"), quote(theme.name)]);
+        await run(["dconf", "write", key("background-color"), quote(theme.background)]);
+        await run(["dconf", "write", key("foreground-color"), quote(theme.foreground)]);
         await run(["dconf", "write", key("palette"), palette]);
         await run(["dconf", "write", key("use-theme-colors"), "false"]);
 
         const all = [...(await uuids()), uuid];
-        const encoded = `[${all.map((u) => `'${u}'`).join(", ")}]`;
+        const encoded = `[${all.map((u) => quote(u)).join(", ")}]`;
         await run(["gsettings", "set", SCHEMA, "list", encoded]);
       }
 
-      await run(["gsettings", "set", SCHEMA, "default", `'${uuid}'`]);
+      await run(["gsettings", "set", SCHEMA, "default", quote(uuid)]);
     },
   };
 }

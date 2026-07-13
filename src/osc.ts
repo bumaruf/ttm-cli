@@ -28,9 +28,10 @@ export function applyTheme(theme: Theme): string {
 
   // Validate each palette entry
   for (let i = 0; i < theme.palette.length; i++) {
-    if (!isHex(theme.palette[i])) {
+    const color = theme.palette[i];
+    if (color === undefined || !isHex(color)) {
       throw new Error(
-        `Theme "${theme.name}": palette[${i}] must be lowercase #rrggbb format (got ${theme.palette[i]})`
+        `Theme "${theme.name}": palette[${i}] must be lowercase #rrggbb format (got ${color})`
       );
     }
   }
