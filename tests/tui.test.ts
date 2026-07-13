@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { parseKey } from "../src/tui";
+import { resetColors } from "../src/osc";
+import { parseKey, teardownSequence } from "../src/tui";
+
+const CURSOR_SHOW = "\x1b[?25h";
+const ALT_SCREEN_OFF = "\x1b[?1049l";
 
 test("parses arrow keys", () => {
   expect(parseKey("\x1b[A")).toEqual({ name: "up" });
@@ -25,4 +29,12 @@ test("parses printable characters", () => {
 test("ignores unknown control sequences", () => {
   expect(parseKey("\x1b[5~")).toBeNull();
   expect(parseKey("\x00")).toBeNull();
+});
+
+test("teardownSequence resets colors then restores cursor and alt-screen on cancel", () => {
+  expect(teardownSequence(true)).toBe(resetColors() + CURSOR_SHOW + ALT_SCREEN_OFF);
+});
+
+test("teardownSequence skips color reset on apply, keeping the applied theme", () => {
+  expect(teardownSequence(false)).toBe(CURSOR_SHOW + ALT_SCREEN_OFF);
 });

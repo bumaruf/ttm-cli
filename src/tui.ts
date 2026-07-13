@@ -1,3 +1,4 @@
+import { writeSync } from "node:fs";
 import type { Backend } from "./backend";
 import { applyTheme, resetColors } from "./osc";
 import { render } from "./render";
@@ -24,6 +25,34 @@ export function parseKey(chunk: string): Key | null {
 
 const write = (s: string) => process.stdout.write(s);
 
+/**
+ * Compose the exact bytes teardown must emit, in order.
+ * Pure and side-effect free so it can be unit-tested without touching a
+ * real terminal. `resetColors` mirrors the `reset` flag passed to teardown:
+ * true on cancel (restore original colors), false on apply (keep the
+ * applied theme's colors).
+ */
+export function teardownSequence(resetColorsFlag: boolean): string {
+  return (resetColorsFlag ? resetColors() : "") + CURSOR_SHOW + ALT_SCREEN_OFF;
+}
+
+/**
+ * Write teardown bytes synchronously and unbuffered directly to the stdout
+ * file descriptor. Unlike process.stdout.write, writeSync blocks until the
+ * bytes are on the wire, so they are guaranteed to land before
+ * process.exit() can kill the process mid-flush. Must never throw: a closed
+ * or broken stdout (EBADF/EPIPE) during teardown must not prevent the rest
+ * of teardown (raw mode restore, stdin pause) from running.
+ */
+function writeTeardown(s: string): void {
+  try {
+    writeSync(1, s);
+  } catch {
+    // stdout is gone (EBADF/EPIPE) or otherwise unwritable — teardown must
+    // never fail because of it.
+  }
+}
+
 export async function runTui(
   themes: Theme[],
   backend: Backend,
@@ -33,8 +62,7 @@ export async function runTui(
   const teardown = (reset: boolean) => {
     if (torn) return;
     torn = true;
-    if (reset) write(resetColors());
-    write(CURSOR_SHOW + ALT_SCREEN_OFF);
+    writeTeardown(teardownSequence(reset));
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
     process.stdin.pause();
   };
