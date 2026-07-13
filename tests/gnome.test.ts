@@ -53,12 +53,26 @@ test("current returns the default profile name", async () => {
   expect(await createGnomeBackend(run).current()).toBe("Nord");
 });
 
-test("apply on an existing profile points default at it and creates nothing", async () => {
+test("apply on an existing profile overwrites its colors, does not re-append it, and repoints default", async () => {
   const { run, calls } = fakeRun(LIST);
   await createGnomeBackend(run).apply(theme);
 
-  const written = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
-  expect(written.some((c) => c[2]?.includes("visible-name"))).toBe(false);
+  const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
+  const written = (suffix: string) => writes.find((c) => c[2]?.endsWith(suffix))?.[3];
+
+  // Write-through: the pre-existing "Nord" profile's colors must be
+  // overwritten with the theme's values, not skipped.
+  expect(written("/visible-name")).toBe("'Nord'");
+  expect(written("/background-color")).toBe("'#2e3440'");
+  expect(written("/foreground-color")).toBe("'#d8dee9'");
+  expect(written("/use-theme-colors")).toBe("false");
+  expect(written("/palette")).toContain("'#81a1c1'");
+
+  // It already exists in ProfilesList, so it must not be re-appended.
+  const setList = calls.find(
+    (c) => c[0] === "gsettings" && c[1] === "set" && c[3] === "list",
+  );
+  expect(setList).toBeUndefined();
 
   const setDefault = calls.find(
     (c) => c[0] === "gsettings" && c[1] === "set" && c[3] === "default",
@@ -82,9 +96,11 @@ test("apply on a missing profile creates it, writes the colors, and adds it to t
   expect(written("/use-theme-colors")).toBe("false");
   expect(written("/palette")).toContain("'#81a1c1'");
 
-  const setList = calls.find(
+  const setListCalls = calls.filter(
     (c) => c[0] === "gsettings" && c[1] === "set" && c[3] === "list",
   );
+  expect(setListCalls.length).toBe(1);
+  const setList = setListCalls[0];
   expect(setList?.[4]).toContain(UUID_A);
   expect(setList?.[4]).toContain(UUID_B);
 });

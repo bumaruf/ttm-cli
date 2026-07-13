@@ -20,17 +20,17 @@ export const realRun: Run = async (cmd) => {
 };
 
 /** Wrap a string as a GVariant literal, backslash-escaping `\` and `'`. */
-function quote(value: string): string {
+export function quote(value: string): string {
   return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 }
 
 /** Reverse of `quote`: strip surrounding quotes and unescape `\\` and `\'`. */
-function unquote(value: string): string {
+export function unquote(value: string): string {
   const trimmed = value.trim().replace(/^'|'$/g, "");
   return trimmed.replace(/\\(\\|')/g, "$1");
 }
 
-function parseList(value: string): string[] {
+export function parseList(value: string): string[] {
   const inner = value.trim().replace(/^\[|\]$/g, "");
   if (inner.trim() === "") return [];
   return inner.split(",").map((entry) => unquote(entry));
@@ -68,18 +68,24 @@ export function createGnomeBackend(run: Run): Backend {
 
     async apply(theme: Theme) {
       let uuid = await uuidFor(theme.name);
+      const isNew = !uuid;
+      if (!uuid) uuid = crypto.randomUUID();
 
-      if (!uuid) {
-        uuid = crypto.randomUUID();
-        const key = (k: string) => `${BASE}/:${uuid}/${k}`;
-        const palette = `[${theme.palette.map((c) => quote(c)).join(", ")}]`;
+      // Write-through always: whether the profile already existed or was
+      // just created, the resolved uuid must end up holding the theme's
+      // colors. Otherwise re-applying a theme onto a pre-existing
+      // same-named profile (e.g. the user's own "Nord" profile, or after
+      // editing themes/nord.toml) would silently keep the old colors.
+      const key = (k: string) => `${BASE}/:${uuid}/${k}`;
+      const palette = `[${theme.palette.map((c) => quote(c)).join(", ")}]`;
 
-        await run(["dconf", "write", key("visible-name"), quote(theme.name)]);
-        await run(["dconf", "write", key("background-color"), quote(theme.background)]);
-        await run(["dconf", "write", key("foreground-color"), quote(theme.foreground)]);
-        await run(["dconf", "write", key("palette"), palette]);
-        await run(["dconf", "write", key("use-theme-colors"), "false"]);
+      await run(["dconf", "write", key("visible-name"), quote(theme.name)]);
+      await run(["dconf", "write", key("background-color"), quote(theme.background)]);
+      await run(["dconf", "write", key("foreground-color"), quote(theme.foreground)]);
+      await run(["dconf", "write", key("palette"), palette]);
+      await run(["dconf", "write", key("use-theme-colors"), "false"]);
 
+      if (isNew) {
         const all = [...(await uuids()), uuid];
         const encoded = `[${all.map((u) => quote(u)).join(", ")}]`;
         await run(["gsettings", "set", SCHEMA, "list", encoded]);
