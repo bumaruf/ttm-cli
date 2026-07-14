@@ -8,9 +8,13 @@ updates:
     commit-message:
       prefix: ci
 
+  # `bun`, not `npm`: this project's lockfile is bun.lock, and the npm ecosystem
+  # cannot update it — it would open PRs that bump package.json and leave the
+  # lockfile stale, which `bun install --frozen-lockfile` correctly rejects.
+  #
   # Only devDependencies exist here — ttm ships with zero runtime dependencies,
   # and that is a deliberate property of the project.
-  - package-ecosystem: npm
+  - package-ecosystem: bun
     directory: "/"
     schedule:
       interval: weekly
