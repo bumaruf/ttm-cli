@@ -1,17 +1,7 @@
 name: release
 
-# Releases are driven by release-please: it reads the Conventional Commits on
-# main, keeps a release PR open with the changelog and version bump, and on
-# merge it creates the tag and the GitHub Release.
-#
-# The publish steps live in THIS file, gated on `release_created`, for two
-# reasons:
-#
-#   1. A tag pushed by a bot using the default GITHUB_TOKEN does NOT trigger
-#      other workflows (GitHub's loop protection). A separate tag-triggered
-#      workflow would simply never run — and would fail silently.
-#   2. npm trusted publishing is pinned to this repo AND this workflow filename.
-#      Publishing from any other file is rejected by the registry.
+# Publishing must stay in THIS file: a bot-pushed tag does not trigger other
+# workflows, and npm trusted publishing is pinned to this filename.
 on:
   push:
     branches: [main]
@@ -30,7 +20,7 @@ jobs:
         with:
           release-type: node
 
-      # Everything below runs only when the release PR was just merged.
+      # Below: only when the release PR was just merged.
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
 
@@ -39,13 +29,8 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      # npm publishes via OIDC (trusted publishing), not a stored token.
-      # setup-bun does not provide npm, and trusted publishing needs a recent CLI.
-      #
-      # Deliberately NO `registry-url:` here. It makes setup-node write an .npmrc
-      # containing `_authToken=${NODE_AUTH_TOKEN}`; with no token in the env that
-      # resolves to an empty credential, npm authenticates with it instead of
-      # falling back to OIDC, and the publish fails as a misleading E404.
+      # No `registry-url:` — it writes an .npmrc with an empty _authToken, which
+      # npm uses instead of OIDC, failing the publish with a misleading E404.
       - uses: actions/setup-node@v4
         if: ${{ steps.release.outputs.release_created }}
         with:
@@ -80,8 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Authenticated by the runner's OIDC identity via npm trusted publishing.
-      # No NPM_TOKEN is stored anywhere.
+      # Authenticated by OIDC (trusted publishing). No NPM_TOKEN anywhere.
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
         run: npm publish --access public

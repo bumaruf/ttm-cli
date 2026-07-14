@@ -1,8 +1,6 @@
 name: pr-title
 
-# PRs are squash-merged, so the PR title becomes the commit on main — and
-# release-please reads those commits to decide the next version and build the
-# changelog. A title that breaks the convention silently breaks the release.
+# PRs are squash-merged, so the title becomes the commit release-please reads.
 on:
   pull_request:
     types: [opened, edited, synchronize]

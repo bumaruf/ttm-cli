@@ -1,8 +1,4 @@
-# Local git hooks, installed by `bun install` (see the `prepare` script).
-#
-# These are a convenience, not a gate: anyone can skip them with `--no-verify`,
-# and that is fine. CI is what actually decides whether a change is acceptable.
-# The point here is fast feedback while you work, not enforcement.
+# Convenience, not a gate — skippable with --no-verify. CI decides.
 
 pre-commit:
   parallel: true

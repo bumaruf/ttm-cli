@@ -36,9 +36,7 @@ function embedded(source: string): Theme[] {
   return JSON.parse(source.slice(start, source.lastIndexOf("]") + 1));
 }
 
-// The whole point of the generated module: what it embeds must be exactly what
-// the on-disk catalogue holds. If these drift, the compiled binary ships a
-// catalogue that differs from themes/ and nobody notices.
+// If the embedded and on-disk catalogues drift, the binary lies about its themes.
 test("the embedded themes round-trip back to the same objects", () => {
   const themes = [theme("Nord"), theme("Dracula")];
   expect(embedded(renderBuiltinModule(themes))).toEqual(themes);
