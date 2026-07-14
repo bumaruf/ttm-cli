@@ -84,16 +84,42 @@ A theme PR carries no code, so it must not trigger an npm release: use the
 
 ## Adding a backend
 
-Terminal emulators other than GNOME Terminal are supported by implementing the
-`Backend` interface in `src/backend.ts`:
+New terminal emulators are supported by implementing the `Backend` interface in
+`src/backend.ts`:
 
 ```ts
 export interface Backend {
-  list(): Promise<string[]>;
+  id: string;                        // stable id, used by `--backend`
+  name: string;                      // human name, shown to the user
+  detect(env: Env): boolean;         // are we running inside this emulator?
+  isInstalled(): Promise<boolean>;   // does its config exist on this machine?
   current(): Promise<string | null>;
   apply(theme: Theme): Promise<void>;
 }
 ```
+
+`detect` must only return `true` when it is *certain* — over SSH or inside an
+embedded terminal, detection is legitimately ambiguous, and the registry
+(`src/registry.ts`) is built to fail loudly with `--backend <id>` as the way
+out rather than guess. Never make `detect` more permissive to "fix" an
+ambiguous case.
+
+**The non-negotiable rule for any backend that touches a file: it must never
+rewrite a user-owned config wholesale.** Config files like `alacritty.toml` or
+`kitty.conf` are hand-written, with the user's own comments. A backend owns a
+separate file of its own (a `ttm-theme.*` file, a Windows Terminal fragment, an
+iTerm2 dynamic profile) and, at most, adds a single import/include line to the
+user's config — once, idempotently, with a backup taken first via
+`src/config-file.ts`'s `addImport`. If a backend can't find a safe place to
+write that one line (or, for Windows Terminal's JSONC `settings.json`, the one
+key it needs to change), it must throw a clear error instead of guessing where
+to put it. `src/alacritty.ts` is the canonical example of this pattern; also
+look at `src/windows-terminal.ts` for the JSONC surgical-edit case, which never
+does a JSON.parse/stringify round-trip (that silently deletes comments).
+
+All I/O — commands (`Run`), filesystem (`Fs`), environment (`Env`) — is
+injected, so a backend's tests never touch the real system. Use
+`createMemoryFs` from `src/fs.ts` for file-based backends.
 
 A new backend should not require changes anywhere else — not to the picker, the
 live-preview logic, or the theme format. If you find yourself needing to touch
@@ -102,7 +128,8 @@ that as a discussion before opening the PR.
 
 Note that the backend is the *persistence* layer only. The live preview works by
 writing OSC escape sequences to the terminal that's already running, which is
-emulator-agnostic — any VTE-like terminal honors it.
+emulator-agnostic — any VTE-like terminal honors it, and inside tmux it is
+wrapped in a DCS passthrough sequence so tmux forwards it instead of eating it.
 
 ## How the code is arranged
 
@@ -118,7 +145,14 @@ by someone who didn't write it.
 | `src/state.ts` | Navigation, fuzzy filter, and the exit contract. Pure. |
 | `src/render.ts` | The screen, as a string. Pure. |
 | `src/backend.ts` | The `Backend` interface — the extension seam |
+| `src/registry.ts` | Picks a backend by detection or `--backend`; never guesses |
+| `src/fs.ts` | The `Fs` seam — injectable filesystem for file-based backends |
+| `src/config-file.ts` | Safe, idempotent import-line handling with backups |
 | `src/gnome.ts` | The only module that knows what dconf is |
+| `src/windows-terminal.ts` | Windows Terminal: fragment file + surgical JSONC edit |
+| `src/alacritty.ts` | Alacritty: owns `ttm-theme.toml`, adds one import line |
+| `src/kitty.ts` | kitty: owns `ttm-theme.conf`, repaints via remote control |
+| `src/iterm2.ts` | iTerm2: a dynamic profile, no preferences ever touched |
 | `src/tui.ts` | The only module that does terminal I/O |
 | `src/cli.ts` | Subcommands and entry point |
 
