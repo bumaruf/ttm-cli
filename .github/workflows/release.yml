@@ -18,10 +18,14 @@ jobs:
 
       # npm publishes via OIDC (trusted publishing), not a stored token.
       # setup-bun does not provide npm, and trusted publishing needs a recent CLI.
+      #
+      # Deliberately NO `registry-url:` here. It makes setup-node write an .npmrc
+      # containing `_authToken=${NODE_AUTH_TOKEN}`; with no token in the env that
+      # resolves to an empty credential, npm authenticates with it instead of
+      # falling back to OIDC, and the publish fails as a misleading E404.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
       - run: npm install -g npm@latest
 
       - run: bun install --frozen-lockfile
