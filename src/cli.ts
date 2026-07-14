@@ -89,10 +89,12 @@ export async function runCli(
 
 import { dirname, join } from "node:path";
 import { BUILTIN_THEMES } from "./builtin-themes";
+import { realFs } from "./fs";
 import { createGnomeBackend, realRun } from "./gnome";
 import { selectBackend } from "./registry";
 import { loadThemes } from "./theme";
 import { runTui } from "./tui";
+import { createWindowsTerminalBackend } from "./windows-terminal";
 
 /**
  * Resolve the theme catalogue, in order:
@@ -133,7 +135,10 @@ if (import.meta.main) {
     }
   }
 
-  const backends = [createGnomeBackend(realRun)];
+  const backends = [
+    createGnomeBackend(realRun),
+    createWindowsTerminalBackend(realFs, process.env),
+  ];
   const selection = selectBackend(backends, process.env, requested);
 
   if ("error" in selection) {
