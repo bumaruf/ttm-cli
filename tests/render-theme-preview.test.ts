@@ -26,19 +26,40 @@ test("the preview names the theme and its provenance", () => {
   expect(md).toContain("MIT");
 });
 
-test("every palette color is rendered as a colored cell", () => {
+// GitHub strips bgcolor/style from comment HTML, so colored cells render blank.
+// A hex in backticks is what it actually renders a swatch for.
+test("every color is a hex in backticks, which is what GitHub renders", () => {
   const md = renderPreview(theme);
   for (const color of theme.palette) {
-    expect(md).toContain(`bgcolor="${color}"`);
+    expect(md).toContain(`\`${color}\``);
   }
-  expect(md).toContain(`bgcolor="${theme.background}"`);
+  expect(md).toContain(`\`${theme.background}\``);
+  expect(md).toContain(`\`${theme.foreground}\``);
+  expect(md).not.toContain("bgcolor");
 });
 
-test("a diff preview shows both themes, labelled", () => {
+test("the palette is laid out normal above bright", () => {
+  const md = renderPreview(theme);
+  expect(md).toContain("| black | red | green |");
+});
+
+test("a diff names exactly which colors changed, and how", () => {
   const after = { ...theme, background: "#1e222a" };
   const md = renderDiffPreview(theme, after);
-  expect(md).toMatch(/before/i);
-  expect(md).toMatch(/after/i);
-  expect(md).toContain('bgcolor="#2e3440"');
-  expect(md).toContain('bgcolor="#1e222a"');
+  expect(md).toContain("`#2e3440` → `#1e222a`");
+  expect(md).toContain("background");
+});
+
+test("a changed palette entry is called out by index", () => {
+  const palette = [...theme.palette];
+  palette[3] = "#ff0000";
+  const md = renderDiffPreview(theme, { ...theme, palette });
+  expect(md).toContain("palette[3]");
+  expect(md).toContain("`#ff0000`");
+});
+
+// A metadata-only PR must not print two identical palettes and call it a diff.
+test("a metadata-only change says so instead of showing a fake diff", () => {
+  const md = renderDiffPreview(theme, { ...theme, contributor: "@beltrano" });
+  expect(md).toMatch(/no color changed/i);
 });
