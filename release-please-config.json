@@ -17,7 +17,8 @@
         { "type": "ci", "section": "CI", "hidden": true },
         { "type": "test", "section": "Tests", "hidden": true },
         { "type": "style", "section": "Style", "hidden": true },
-        { "type": "chore", "section": "Chores", "hidden": true }
+        { "type": "chore", "section": "Chores", "hidden": true },
+        { "type": "theme", "section": "Themes", "hidden": true }
       ]
     }
   }
