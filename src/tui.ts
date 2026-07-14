@@ -200,8 +200,18 @@ export async function runTui(
     teardown(true);
     process.exit(130);
   };
-  const offSigint = io.onSignal("SIGINT", onSignal);
-  const offSigterm = io.onSignal("SIGTERM", onSignal);
+  // Signals are a safety net on top of the `finally`, not the main path.
+  // Windows does not deliver SIGTERM, and registering it can throw — that
+  // must never take down the TUI, because the `finally` already
+  // guarantees teardown.
+  const unregister: Array<() => void> = [];
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    try {
+      unregister.push(io.onSignal(signal, onSignal));
+    } catch {
+      // Platform does not support this signal. The `finally` still runs.
+    }
+  }
 
   try {
     io.setRawMode(true);
@@ -248,7 +258,12 @@ export async function runTui(
     return null;
   } finally {
     teardown(true);
-    offSigint();
-    offSigterm();
+    for (const off of unregister) {
+      try {
+        off();
+      } catch {
+        // Same reasoning as above: unregistering must never throw.
+      }
+    }
   }
 }
