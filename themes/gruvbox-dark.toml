@@ -1,4 +1,8 @@
 name = "Gruvbox Dark"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/morhetz/gruvbox"
+license = "unlicensed"
 background = "#282828"
 foreground = "#ebdbb2"
 palette = [

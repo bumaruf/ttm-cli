@@ -27,6 +27,7 @@ jobs:
             chore
             perf
             style
+            theme
           requireScope: false
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |

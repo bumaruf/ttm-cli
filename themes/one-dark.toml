@@ -1,4 +1,8 @@
 name = "One Dark"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/atom/atom/tree/master/packages/one-dark-syntax"
+license = "MIT"
 background = "#282c34"
 foreground = "#abb2bf"
 palette = [

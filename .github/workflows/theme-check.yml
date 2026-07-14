@@ -1,0 +1,38 @@
+name: theme-check
+
+# Only when themes change — a code PR does not pay for this.
+on:
+  pull_request:
+    paths:
+      - "themes/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      - name: check the themes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_AUTHOR: "@${{ github.event.pull_request.user.login }}"
+        run: bun run scripts/theme-check-ci.ts
+
+      # Reviewing a color by reading hex is exactly what this project abolishes.
+      - name: post the preview
+        if: success()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: theme-preview.md

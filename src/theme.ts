@@ -7,6 +7,10 @@ export interface Theme {
   background: Hex;
   foreground: Hex;
   palette: Hex[];
+  author?: string;
+  contributor?: string;
+  source?: string;
+  license?: string;
 }
 
 function fail(file: string, message: string): never {
@@ -65,7 +69,25 @@ export function parseTheme(source: string, filename: string): Theme {
     }
   });
 
-  return { name: name.trim(), background, foreground, palette };
+  const optionalString = (field: string): string | undefined => {
+    const value = data[field];
+    if (value === undefined) return undefined;
+    if (typeof value !== "string") {
+      fail(filename, `${field} must be a string`);
+    }
+    return value;
+  };
+
+  return {
+    name: name.trim(),
+    background,
+    foreground,
+    palette,
+    author: optionalString("author"),
+    contributor: optionalString("contributor"),
+    source: optionalString("source"),
+    license: optionalString("license"),
+  };
 }
 
 export async function loadThemes(dir: string): Promise<Theme[]> {

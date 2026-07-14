@@ -1,4 +1,8 @@
 name = "Tokyo Night"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/enkia/tokyo-night-vscode-theme"
+license = "MIT"
 background = "#1a1b26"
 foreground = "#c0caf5"
 palette = [

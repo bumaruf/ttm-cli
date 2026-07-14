@@ -1,4 +1,8 @@
 name = "Kanagawa"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/rebelot/kanagawa.nvim"
+license = "MIT"
 background = "#1f1f28"
 foreground = "#dcd7ba"
 palette = [
