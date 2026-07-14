@@ -21,7 +21,7 @@ jobs:
           release-type: node
 
       # Below: only when the release PR was just merged.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created }}
 
       - uses: oven-sh/setup-bun@v2
