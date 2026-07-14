@@ -1,10 +1,23 @@
+import type { Env } from "./backend";
 import { isHex } from "./color";
 import type { Theme } from "./theme";
 
 const BEL = "\x07";
 const OSC = "\x1b]";
 
-export function applyTheme(theme: Theme): string {
+/**
+ * tmux intercepts OSC sequences instead of forwarding them to the real
+ * terminal, so the live preview does nothing inside it. DCS passthrough
+ * (ESC P tmux; ... ESC \) forwards them, but every ESC of the payload must
+ * be doubled or tmux consumes it.
+ */
+export function wrapForMultiplexer(sequences: string, env: Env): string {
+  if (!env.TMUX) return sequences;
+  const escaped = sequences.replaceAll("\x1b", "\x1b\x1b");
+  return `\x1bPtmux;${escaped}\x1b\\`;
+}
+
+export function applyTheme(theme: Theme, env: Env = process.env): string {
   // Validate palette length
   if (theme.palette.length !== 16) {
     throw new Error(
@@ -39,13 +52,16 @@ export function applyTheme(theme: Theme): string {
   const palette = theme.palette
     .map((color, index) => `${OSC}4;${index};${color}${BEL}`)
     .join("");
-  return (
+  const sequences =
     palette +
     `${OSC}10;${theme.foreground}${BEL}` +
-    `${OSC}11;${theme.background}${BEL}`
-  );
+    `${OSC}11;${theme.background}${BEL}`;
+  return wrapForMultiplexer(sequences, env);
 }
 
-export function resetColors(): string {
-  return `${OSC}104${BEL}${OSC}110${BEL}${OSC}111${BEL}`;
+export function resetColors(env: Env = process.env): string {
+  return wrapForMultiplexer(
+    `${OSC}104${BEL}${OSC}110${BEL}${OSC}111${BEL}`,
+    env,
+  );
 }
