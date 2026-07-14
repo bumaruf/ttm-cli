@@ -1,18 +1,41 @@
 name: release
+
+# Releases are driven by release-please: it reads the Conventional Commits on
+# main, keeps a release PR open with the changelog and version bump, and on
+# merge it creates the tag and the GitHub Release.
+#
+# The publish steps live in THIS file, gated on `release_created`, for two
+# reasons:
+#
+#   1. A tag pushed by a bot using the default GITHUB_TOKEN does NOT trigger
+#      other workflows (GitHub's loop protection). A separate tag-triggered
+#      workflow would simply never run — and would fail silently.
+#   2. npm trusted publishing is pinned to this repo AND this workflow filename.
+#      Publishing from any other file is rejected by the registry.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
 
 permissions:
   contents: write
+  pull-requests: write
   id-token: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          release-type: node
+
+      # Everything below runs only when the release PR was just merged.
       - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+
       - uses: oven-sh/setup-bun@v2
+        if: ${{ steps.release.outputs.release_created }}
         with:
           bun-version: 1.3.14
 
@@ -24,39 +47,41 @@ jobs:
       # resolves to an empty credential, npm authenticates with it instead of
       # falling back to OIDC, and the publish fails as a misleading E404.
       - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs.release_created }}
         with:
           node-version: 22
       - run: npm install -g npm@latest
+        if: ${{ steps.release.outputs.release_created }}
 
       - run: bun install --frozen-lockfile
-
-      # Fail before anything is published if the tag and package.json disagree.
-      - name: Check tag matches package.json version
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          pkg="$(node -p "require('./package.json').version")"
-          if [ "$tag" != "$pkg" ]; then
-            echo "tag v$tag does not match package.json version $pkg" >&2
-            exit 1
-          fi
+        if: ${{ steps.release.outputs.release_created }}
 
       - run: bun test
+        if: ${{ steps.release.outputs.release_created }}
+
       - run: bun run build
+        if: ${{ steps.release.outputs.release_created }}
+
       - name: Build .deb
+        if: ${{ steps.release.outputs.release_created }}
         run: |
           chmod +x packaging/deb/build.sh
-          packaging/deb/build.sh "${GITHUB_REF_NAME#v}"
+          packaging/deb/build.sh "${{ steps.release.outputs.version }}"
+
       - name: Name the release asset to match the README's install command
+        if: ${{ steps.release.outputs.release_created }}
         run: cp dist/ttm dist/ttm-linux-x64
-      - name: Attach binary to the release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/ttm-linux-x64
-            ttm_*_amd64.deb
+
+      - name: Attach the binary and the .deb to the release
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          gh release upload "${{ steps.release.outputs.tag_name }}" \
+            dist/ttm-linux-x64 ttm_*_amd64.deb --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Authenticated by the runner's OIDC identity via npm trusted publishing.
-      # No NPM_TOKEN: the trusted publisher for @bumaruf/ttm-cli is configured on
-      # npmjs.com and pinned to this repo + this workflow file.
-      # Provenance is implied by trusted publishing, so --provenance is not passed.
+      # No NPM_TOKEN is stored anywhere.
       - name: Publish to npm
+        if: ${{ steps.release.outputs.release_created }}
         run: npm publish --access public
