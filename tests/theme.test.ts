@@ -83,6 +83,35 @@ test("duplicate theme names are rejected", async () => {
   await expect(loadThemes(dir)).rejects.toThrow(/duplicate/);
 });
 
+test("parses the metadata fields when present", () => {
+  const source = `
+name = "Nord"
+author = "@fulano"
+contributor = "@beltrano"
+source = "https://www.nordtheme.com"
+license = "MIT"
+background = "#2e3440"
+foreground = "#d8dee9"
+palette = [${PALETTE.map((c) => `"${c}"`).join(",")}]
+`;
+  const theme = parseTheme(source, "nord.toml");
+  expect(theme.author).toBe("@fulano");
+  expect(theme.contributor).toBe("@beltrano");
+  expect(theme.source).toBe("https://www.nordtheme.com");
+  expect(theme.license).toBe("MIT");
+});
+
+test("metadata is optional — the existing catalogue still parses", () => {
+  const theme = parseTheme(toml(), "nord.toml");
+  expect(theme.author).toBeUndefined();
+  expect(theme.license).toBeUndefined();
+});
+
+test("a metadata field of the wrong type is rejected, naming the field", () => {
+  const bad = toml({ author: "42" });
+  expect(() => parseTheme(bad, "bad.toml")).toThrow(/bad\.toml.*author/);
+});
+
 test("permission denied on unreadable directory is rejected", async () => {
   // Skip if running as root (root can read 0o000 directories)
   if (process.getuid?.() === 0) {
