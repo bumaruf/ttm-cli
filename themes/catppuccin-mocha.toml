@@ -1,4 +1,8 @@
 name = "Catppuccin Mocha"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/catppuccin/catppuccin"
+license = "MIT"
 background = "#1e1e2e"
 foreground = "#cdd6f4"
 palette = [

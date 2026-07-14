@@ -1,4 +1,8 @@
 name = "Rose Pine"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://rosepinetheme.com/palette/"
+license = "MIT"
 background = "#191724"
 foreground = "#e0def4"
 palette = [

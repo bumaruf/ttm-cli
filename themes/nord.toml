@@ -1,4 +1,8 @@
 name = "Nord"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://www.nordtheme.com/docs/colors-and-palettes"
+license = "MIT"
 background = "#2e3440"
 foreground = "#d8dee9"
 palette = [

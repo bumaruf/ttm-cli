@@ -1,4 +1,8 @@
 name = "Everforest Dark"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/sainnhe/everforest"
+license = "MIT"
 background = "#2d353b"
 foreground = "#d3c6aa"
 palette = [

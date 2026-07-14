@@ -1,4 +1,8 @@
 name = "Dracula"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://draculatheme.com/contribute"
+license = "MIT"
 background = "#282a36"
 foreground = "#f8f8f2"
 palette = [

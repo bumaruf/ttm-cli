@@ -28,7 +28,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#f5c2e7",
       "#94e2d5",
       "#a6adc8"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/catppuccin/catppuccin",
+    "license": "MIT"
   },
   {
     "name": "Dracula",
@@ -51,7 +55,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#ff92df",
       "#a4ffff",
       "#ffffff"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://draculatheme.com/contribute",
+    "license": "MIT"
   },
   {
     "name": "Everforest Dark",
@@ -74,7 +82,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#d699b6",
       "#83c092",
       "#d3c6aa"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/sainnhe/everforest",
+    "license": "MIT"
   },
   {
     "name": "Gruvbox Dark",
@@ -97,7 +109,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#d3869b",
       "#8ec07c",
       "#ebdbb2"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/morhetz/gruvbox",
+    "license": "MIT"
   },
   {
     "name": "Kanagawa",
@@ -120,7 +136,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#938aa9",
       "#7aa89f",
       "#dcd7ba"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/rebelot/kanagawa.nvim",
+    "license": "MIT"
   },
   {
     "name": "Nord",
@@ -143,7 +163,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#b48ead",
       "#8fbcbb",
       "#eceff4"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://www.nordtheme.com/docs/colors-and-palettes",
+    "license": "MIT"
   },
   {
     "name": "One Dark",
@@ -166,7 +190,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#c678dd",
       "#56b6c2",
       "#ffffff"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/atom/atom/tree/master/packages/one-dark-syntax",
+    "license": "MIT"
   },
   {
     "name": "Rose Pine",
@@ -189,7 +217,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#c4a7e7",
       "#ebbcba",
       "#e0def4"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://rosepinetheme.com/palette/",
+    "license": "MIT"
   },
   {
     "name": "Solarized Dark",
@@ -212,7 +244,11 @@ export const BUILTIN_THEMES: Theme[] = [
       "#6c71c4",
       "#93a1a1",
       "#fdf6e3"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://ethanschoonover.com/solarized/",
+    "license": "MIT"
   },
   {
     "name": "Tokyo Night",
@@ -235,6 +271,10 @@ export const BUILTIN_THEMES: Theme[] = [
       "#bb9af7",
       "#7dcfff",
       "#c0caf5"
-    ]
+    ],
+    "author": "@bumaruf",
+    "contributor": "@bumaruf",
+    "source": "https://github.com/enkia/tokyo-night-vscode-theme",
+    "license": "MIT"
   }
 ];
