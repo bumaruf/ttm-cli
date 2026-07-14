@@ -1,0 +1,36 @@
+name: pr-title
+
+# PRs are squash-merged, so the PR title becomes the commit on main — and
+# release-please reads those commits to decide the next version and build the
+# changelog. A title that breaks the convention silently breaks the release.
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  conventional-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            refactor
+            test
+            ci
+            build
+            chore
+            perf
+            style
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" must start with a lowercase letter, matching
+            the rest of this project's history (e.g. "fix: restore the cursor on exit").
