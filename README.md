@@ -5,15 +5,12 @@
 
 A TUI for picking a GNOME Terminal color theme — the window running it is the preview.
 
-<!--
-demo.gif was not recorded (this repo has no vhs installed and the TUI is
-interactive, so it can't be captured headlessly). To produce it:
-
-    vhs demo.tape
-
-Then drop the resulting demo.gif here and uncomment the line below.
-
 ![demo](demo.gif)
+
+<!--
+Re-record with: bun run build && vhs demo.tape
+Note: the GIF is recorded through ttyd, which ignores OSC 11, so the background
+does not change on screen. In a real GNOME Terminal the whole window repaints.
 -->
 
 As you move through the list, `ttm` repaints the terminal window you're sitting in — live — with the real colors of the highlighted theme. Nothing is written to disk while you browse. Press `Esc` and the window snaps back to whatever it looked like before you started, as if nothing happened. Press `Enter` and the theme is applied for real, and the window is left showing it, without reopening anything.
