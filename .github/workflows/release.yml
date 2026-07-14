@@ -15,7 +15,27 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
+
+      # npm publishes via OIDC (trusted publishing), not a stored token.
+      # setup-bun does not provide npm, and trusted publishing needs a recent CLI.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+
       - run: bun install --frozen-lockfile
+
+      # Fail before anything is published if the tag and package.json disagree.
+      - name: Check tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json version $pkg" >&2
+            exit 1
+          fi
+
       - run: bun test
       - run: bun run build
       - name: Build .deb
@@ -30,7 +50,9 @@ jobs:
           files: |
             dist/ttm-linux-x64
             ttm_*_amd64.deb
+      # Authenticated by the runner's OIDC identity via npm trusted publishing.
+      # No NPM_TOKEN: the trusted publisher for @bumaruf/ttm-cli is configured on
+      # npmjs.com and pinned to this repo + this workflow file.
+      # Provenance is implied by trusted publishing, so --provenance is not passed.
       - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

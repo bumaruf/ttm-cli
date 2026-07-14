@@ -1,16 +1,7 @@
 # ttm
 
-> ⚠️ TODO: replace `OWNER_PLACEHOLDER` below with the real GitHub username/org
-> once this repo is pushed to GitHub. It could not be inferred automatically:
-> this checkout has no `git remote` configured.
-
-<!--
-Badge URLs assume the repo lives at github.com/OWNER_PLACEHOLDER/ttm.
-Replace OWNER_PLACEHOLDER below once the repo is pushed, or delete the badges.
--->
-
-[![CI](https://github.com/OWNER_PLACEHOLDER/ttm/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER_PLACEHOLDER/ttm/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/ttm.svg)](https://www.npmjs.com/package/ttm)
+[![CI](https://github.com/bumaruf/ttm-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/bumaruf/ttm-cli/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@bumaruf/ttm-cli.svg)](https://www.npmjs.com/package/@bumaruf/ttm-cli)
 
 A TUI for picking a GNOME Terminal color theme — the window running it is the preview.
 
@@ -29,20 +20,20 @@ As you move through the list, `ttm` repaints the terminal window you're sitting 
 
 ## Install
 
-Not yet published. The intended ways to install, once the release tasks land:
-
 ```bash
-# npm
-npm i -g ttm
+# npm (requires Bun)
+npm i -g @bumaruf/ttm-cli
 
-# prebuilt binary (GitHub Releases)
-curl -fsSL https://github.com/OWNER_PLACEHOLDER/ttm/releases/latest/download/ttm-linux-x64 -o ttm
+# prebuilt binary — self-contained, no runtime needed
+curl -fsSL https://github.com/bumaruf/ttm-cli/releases/latest/download/ttm-linux-x64 -o ttm
 chmod +x ttm
 sudo mv ttm /usr/local/bin/ttm
 
 # Debian/Ubuntu
 sudo dpkg -i ttm_<version>_amd64.deb
 ```
+
+The command is `ttm` however you install it.
 
 Until then, build from source (see [Development](#development) below).
 
