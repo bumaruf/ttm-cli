@@ -55,10 +55,23 @@ export function createGnomeBackend(run: Run): Backend {
   };
 
   return {
-    async list() {
-      const result: string[] = [];
-      for (const uuid of await uuids()) result.push(await nameOf(uuid));
-      return result;
+    id: "gnome",
+    name: "GNOME Terminal",
+
+    detect(env) {
+      return (
+        env.GNOME_TERMINAL_SCREEN !== undefined ||
+        env.GNOME_TERMINAL_SERVICE !== undefined
+      );
+    },
+
+    async isInstalled() {
+      try {
+        await run(["gsettings", "get", SCHEMA, "list"]);
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     async current() {

@@ -2,13 +2,16 @@
 import type { Backend } from "./backend";
 import type { Theme } from "./theme";
 
-const USAGE = `ttm — pick a terminal theme and see it live
+export const USAGE = `ttm — pick a terminal theme and see it live
 
   ttm                 open the picker
   ttm list            list available themes
   ttm current         print the active theme
   ttm apply <name>    apply a theme by name
-  ttm --help          show this help`;
+  ttm --backend <id>  force a terminal backend
+  ttm --help          show this help
+
+backends: gnome, windows-terminal, alacritty, kitty, iterm2`;
 
 export async function runCli(
   argv: string[],
@@ -70,6 +73,12 @@ export async function runCli(
         return 1;
       }
       out(`applied ${theme.name} (new windows will use it)`);
+      if (backend.id === "iterm2") {
+        out("");
+        out("first time only: in iTerm2, open Settings → Profiles and set");
+        out(`"ttm — ${theme.name}" as your default profile. After that, ttm`);
+        out("updates it in place and you never need to touch this again.");
+      }
       return 0;
     }
 
@@ -87,10 +96,16 @@ export async function runCli(
 }
 
 import { dirname, join } from "node:path";
+import { createAlacrittyBackend } from "./alacritty";
 import { BUILTIN_THEMES } from "./builtin-themes";
+import { realFs } from "./fs";
 import { createGnomeBackend, realRun } from "./gnome";
+import { createIterm2Backend } from "./iterm2";
+import { createKittyBackend } from "./kitty";
+import { selectBackend } from "./registry";
 import { loadThemes } from "./theme";
 import { runTui } from "./tui";
+import { createWindowsTerminalBackend } from "./windows-terminal";
 
 /**
  * Resolve the theme catalogue, in order:
@@ -116,7 +131,44 @@ export async function resolveThemes(
 }
 
 if (import.meta.main) {
-  const backend = createGnomeBackend(realRun);
+  const argv = process.argv.slice(2);
+
+  // `--backend <id>` can appear anywhere; strip it from argv before parsing
+  // the rest of the command line.
+  let requested: string | undefined;
+  const flagIndex = argv.indexOf("--backend");
+  if (flagIndex !== -1) {
+    requested = argv[flagIndex + 1];
+    argv.splice(flagIndex, 2);
+    if (!requested) {
+      console.error("usage: ttm --backend <id>");
+      process.exit(1);
+    }
+  }
+
+  // `--help` must work everywhere: on a machine with no supported terminal, on
+  // a CI runner, in a container. Resolving a backend first would make the help
+  // text unreachable exactly for the people who most need to read it.
+  if (argv[0] === "--help" || argv[0] === "-h") {
+    console.log(USAGE);
+    process.exit(0);
+  }
+
+  const backends = [
+    createGnomeBackend(realRun),
+    createWindowsTerminalBackend(realFs, process.env),
+    createAlacrittyBackend(realFs, process.env, process.platform),
+    createKittyBackend(realFs, realRun, process.env),
+    createIterm2Backend(realFs, process.env),
+  ];
+  const selection = selectBackend(backends, process.env, requested);
+
+  if ("error" in selection) {
+    console.error(selection.error);
+    process.exit(1);
+  }
+
+  const backend = selection.backend;
   const themes = await resolveThemes();
 
   if (themes.length === 0) {
@@ -125,8 +177,6 @@ if (import.meta.main) {
     );
     process.exit(1);
   }
-
-  const argv = process.argv.slice(2);
 
   if (argv.length === 0) {
     const applied = await runTui(themes, backend);

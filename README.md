@@ -34,7 +34,7 @@ change on screen. In a real GNOME Terminal the whole window repaints.
 
 ## 💻 Project
 
-`ttm` — short for **terminal theme manager** — is a TUI for picking a GNOME Terminal color theme, built on one idea: **the window running it is the preview.**
+`ttm` — short for **terminal theme manager** — is a TUI for picking a terminal color theme, built on one idea: **the window running it is the preview.** It supports GNOME Terminal, Windows Terminal, iTerm2, Alacritty, and kitty, on Linux, macOS, and Windows.
 
 As you move through the list, `ttm` repaints the terminal you're sitting in — live — with the real colors of the highlighted theme. Nothing is written to disk while you browse. Press `Esc` and the window snaps back to exactly how it looked before, as if nothing happened. Press `Enter` and the theme is applied for real, with the window already showing it — no reopening anything.
 
@@ -42,18 +42,23 @@ Choosing a color scheme is a visual task. A list of names is the worst possible 
 
 ## 🚀 How to run
 
+Installation differs by platform: Linux has three options (npm, a prebuilt binary, and a `.deb`); **macOS and Windows are served by npm only** — there is no compiled binary or installer for them.
+
 ```bash
-# npm (requires Bun)
+# npm — Linux, macOS, Windows (requires Bun on your PATH; the published bin is
+# a TypeScript file with a `#!/usr/bin/env bun` shebang)
 npm i -g @bumaruf/ttm-cli
 
-# prebuilt binary — self-contained, no runtime needed
+# Linux only: prebuilt binary — self-contained, no runtime needed
 curl -fsSL https://github.com/bumaruf/ttm-cli/releases/latest/download/ttm-linux-x64 -o ttm
 chmod +x ttm
 sudo mv ttm /usr/local/bin/ttm
 
-# Debian/Ubuntu
+# Linux only: Debian/Ubuntu
 sudo dpkg -i ttm_<version>_amd64.deb
 ```
+
+On macOS and Windows, if `ttm` fails to run right after `npm i -g`, install [Bun](https://bun.sh) first — npm's shim just invokes it.
 
 The command is `ttm` however you install it. Run it with no arguments to open the picker:
 
@@ -72,8 +77,15 @@ ttm                 open the picker
 ttm list            list available themes
 ttm current         print the active theme
 ttm apply <name>    apply a theme by name
+ttm --backend <id>  force a terminal backend
 ttm --help          show this help
 ```
+
+### Choosing a backend
+
+`ttm` tries to detect which terminal you're running inside and pick the matching backend automatically. Detection is environment-variable based, so it gets it wrong in two situations: **over SSH**, and **inside an embedded/nested terminal** (e.g. VS Code's integrated terminal). When it can't tell — or when more than one backend looks plausible — `ttm` refuses to guess and tells you to pass `--backend <id>` explicitly, rather than silently writing to the wrong config.
+
+`ttm` works inside **tmux**: the live preview is wrapped in a DCS passthrough sequence so tmux forwards it instead of swallowing it.
 
 ## ⚙️ Configuration
 
@@ -103,11 +115,24 @@ Press `Enter` and `ttm` writes the theme into GNOME Terminal's dconf settings an
 
 ### Compatibility
 
-GNOME Terminal today (VTE-based terminals that honor dconf profiles and OSC 4/10/11). Another emulator means implementing the `Backend` interface in [`src/backend.ts`](src/backend.ts):
+| Backend | OS | Requires |
+| --- | --- | --- |
+| GNOME Terminal | Linux | `dconf`/`gsettings` on your PATH |
+| Windows Terminal | Windows | an existing `settings.json` (Store or unpackaged) |
+| iTerm2 | macOS | one manual step the first time: in iTerm2's Settings → Profiles, select `"ttm — <theme>"` as your default profile. After that, `ttm` updates that profile in place and new windows use it automatically |
+| Alacritty | Linux, macOS, Windows | an existing `alacritty.toml` |
+| kitty | Linux, macOS, Windows | an existing `kitty.conf` (remote control is used to repaint open windows if enabled, but is not required) |
+
+**`ttm` never rewrites your config wholesale.** It owns its own file (a fragment, a dynamic profile, or a `ttm-theme.*` file next to your config) and, at most, adds a single import/include line to your existing config — once, with a backup taken first. Your comments and formatting are never touched beyond that one line.
+
+Another emulator means implementing the `Backend` interface in [`src/backend.ts`](src/backend.ts):
 
 ```ts
 export interface Backend {
-  list(): Promise<string[]>;
+  id: string;
+  name: string;
+  detect(env: Env): boolean;
+  isInstalled(): Promise<boolean>;
   current(): Promise<string | null>;
   apply(theme: Theme): Promise<void>;
 }

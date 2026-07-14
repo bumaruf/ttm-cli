@@ -117,8 +117,11 @@ function fakeBackend(applyImpl?: (t: Theme) => Promise<void>): Backend & {
   const applyCalls: Theme[] = [];
   return {
     applyCalls,
-    async list() {
-      return THEMES.map((t) => t.name);
+    id: "fake",
+    name: "Fake",
+    detect: () => true,
+    async isInstalled() {
+      return true;
     },
     async current() {
       return null;
@@ -135,7 +138,10 @@ function fakeBackend(applyImpl?: (t: Theme) => Promise<void>): Backend & {
  * fed to the "input" async iterable one at a time; when exhausted the
  * iterable ends, simulating stdin EOF.
  */
-function fakeIo(chunks: string[]) {
+function fakeIo(
+  chunks: string[],
+  overrides?: { onSignal?: TuiIo["onSignal"] },
+) {
   const written: string[] = [];
   const syncWritten: string[] = [];
   const rawModeCalls: boolean[] = [];
@@ -150,7 +156,7 @@ function fakeIo(chunks: string[]) {
     writeSync: (s) => syncWritten.push(s),
     setRawMode: (on) => rawModeCalls.push(on),
     size: () => ({ columns: 80, rows: 24 }),
-    onSignal: () => () => {},
+    onSignal: overrides?.onSignal ?? (() => () => {}),
     start: () => {},
     stop: () => {},
   };
@@ -195,6 +201,21 @@ test("navigating down repaints: emits the OSC sequence for the newly focused the
 
   const emitted = written.join("");
   expect(emitted).toContain(applyTheme(THEMES[1]!));
+});
+
+test("registering a signal that the platform does not support does not throw", async () => {
+  const { io, syncWritten, rawModeCalls } = fakeIo(["\x1b"], {
+    onSignal: () => {
+      throw new Error("SIGTERM is not supported on this platform");
+    },
+  });
+  const backend = fakeBackend();
+
+  // Teardown lives in the `finally`; an unavailable signal must not take
+  // down the TUI.
+  await expect(runTui(THEMES, backend, io)).resolves.toBeNull();
+  expect(rawModeCalls.at(-1)).toBe(false);
+  expect(syncWritten.join("")).toContain(resetColors({}));
 });
 
 test("teardown is idempotent: the reset sequence is emitted exactly once even though teardown runs twice (loop return + finally)", async () => {

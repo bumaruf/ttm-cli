@@ -51,3 +51,55 @@ jobs:
           echo "$output"
           [ -n "$output" ]
           echo "$output" | grep -q "ttm apply"
+
+  # macOS and Windows are served by npm only — no compiled binary, no
+  # installer. These jobs prove the code runs natively on those platforms,
+  # via the same path real users will use: `bun run` from source and, on
+  # Windows, the globally installed npm package.
+  smoke-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun test
+      - name: the CLI must run from source
+        run: |
+          set -euo pipefail
+          output="$(bun run src/cli.ts --help)"
+          echo "$output"
+          echo "$output" | grep -q "ttm apply"
+
+  smoke-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun test
+      - name: the CLI must run from source
+        shell: pwsh
+        run: |
+          $output = (bun run src/cli.ts --help) -join "`n"
+          Write-Output $output
+          # NB: `$array -notmatch` filters instead of returning a boolean —
+          # join into a single string first, or this is always truthy.
+          if ($output -notmatch "ttm apply") { exit 1 }
+
+      # The real question for Windows: does the npm-installed bin work at
+      # all? The bin is a .ts file with a `#!/usr/bin/env bun` shebang; on
+      # Windows npm generates a .cmd shim from it. If that shim is broken,
+      # every Windows user is broken, and nothing else in CI would catch it.
+      - name: the globally installed `ttm` command must work
+        shell: pwsh
+        run: |
+          npm pack
+          $tarball = Get-ChildItem -Filter "*.tgz" | Select-Object -First 1
+          npm install -g $tarball.Name
+          $output = (ttm --help) -join "`n"
+          Write-Output $output
+          if ($output -notmatch "ttm apply") { exit 1 }

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { applyTheme, resetColors } from "../src/osc";
+import { applyTheme, resetColors, wrapForMultiplexer } from "../src/osc";
 import type { Theme } from "../src/theme";
 
 const theme: Theme = {
@@ -111,4 +111,30 @@ test("valid theme still works after validation", () => {
   expect(out).toContain("\x1b]10;#ffffff\x07");
   expect(out).toContain("\x1b]11;#000000\x07");
   expect(out.match(/\x1b\]4;/g)).toHaveLength(16);
+});
+
+test("outside tmux, sequences pass through untouched", () => {
+  expect(wrapForMultiplexer("\x1b]11;#000000\x07", {})).toBe(
+    "\x1b]11;#000000\x07",
+  );
+});
+
+test("inside tmux, sequences are wrapped in DCS passthrough", () => {
+  const wrapped = wrapForMultiplexer("\x1b]11;#000000\x07", {
+    TMUX: "/tmp/tmux-1000/default,123,0",
+  });
+  expect(wrapped.startsWith("\x1bPtmux;")).toBe(true);
+  expect(wrapped.endsWith("\x1b\\")).toBe(true);
+  // Every ESC of the inner payload must be doubled, or tmux eats it.
+  expect(wrapped).toContain("\x1b\x1b]11;#000000\x07");
+});
+
+test("applyTheme wraps when inside tmux", () => {
+  const inside = applyTheme(theme, { TMUX: "x" });
+  expect(inside.startsWith("\x1bPtmux;")).toBe(true);
+});
+
+test("resetColors wraps when inside tmux", () => {
+  expect(resetColors({ TMUX: "x" }).startsWith("\x1bPtmux;")).toBe(true);
+  expect(resetColors({})).toBe("\x1b]104\x07\x1b]110\x07\x1b]111\x07");
 });

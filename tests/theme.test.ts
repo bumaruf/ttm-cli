@@ -113,8 +113,10 @@ test("a metadata field of the wrong type is rejected, naming the field", () => {
 });
 
 test("permission denied on unreadable directory is rejected", async () => {
-  // Skip if running as root (root can read 0o000 directories)
-  if (process.getuid?.() === 0) {
+  // Root reads a 0o000 directory anyway, and Windows ignores the Unix
+  // permission bits entirely — in both cases chmod cannot produce the
+  // condition under test, so there is nothing to assert.
+  if (process.getuid?.() === 0 || process.platform === "win32") {
     return;
   }
 

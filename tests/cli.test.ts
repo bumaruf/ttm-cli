@@ -15,13 +15,32 @@ const THEMES = [theme("Dracula"), theme("Nord")];
 function fakeBackend() {
   const applied: string[] = [];
   const backend: Backend = {
-    list: async () => THEMES.map((t) => t.name),
+    id: "fake",
+    name: "Fake",
+    detect: () => true,
+    isInstalled: async () => true,
     current: async () => "Nord",
     apply: async (t) => {
       applied.push(t.name);
     },
   };
   return { backend, applied };
+}
+
+/** A backend that explodes if touched — proves --help never reaches one. */
+function failingBackend(): Backend {
+  return {
+    id: "explodes",
+    name: "Explodes",
+    detect: () => false,
+    isInstalled: async () => false,
+    current: async () => {
+      throw new Error("--help must not resolve a backend");
+    },
+    apply: async () => {
+      throw new Error("--help must not resolve a backend");
+    },
+  };
 }
 
 function capture() {
@@ -77,4 +96,17 @@ test("an unknown command exits non-zero", async () => {
   const { backend } = fakeBackend();
   const { out } = capture();
   expect(await runCli(["frobnicate"], backend, THEMES, out)).toBe(1);
+});
+
+// `ttm --help` must work with no backend resolved at all. A machine with no
+// supported terminal — a CI runner, a container, an ambiguous environment —
+// is exactly where someone needs to read the help text, and where backend
+// detection fails. Requiring a backend first made `--help` unreachable there.
+test("--help does not need a backend and lists them", async () => {
+  const { out, text } = capture();
+  const code = await runCli(["--help"], failingBackend(), THEMES, out);
+  expect(code).toBe(0);
+  expect(text()).toContain("ttm apply");
+  expect(text()).toContain("gnome");
+  expect(text()).toContain("windows-terminal");
 });
