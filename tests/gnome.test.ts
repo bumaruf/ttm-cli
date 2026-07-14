@@ -30,13 +30,18 @@ function fakeRun(responses: Record<string, string>) {
 const LIST = {
   "gsettings get org.gnome.Terminal.ProfilesList list": `['${UUID_A}', '${UUID_B}']\n`,
   "gsettings get org.gnome.Terminal.ProfilesList default": `'${UUID_A}'\n`,
-  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Nord'\n",
-  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_B}/visible-name`]: "\n",
+  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+    "'Nord'\n",
+  [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_B}/visible-name`]:
+    "\n",
 };
 
 test("list parses dconf quoting and names the unnamed profile", async () => {
   const { run } = fakeRun(LIST);
-  expect(await createGnomeBackend(run).list()).toEqual(["Nord", "(original profile)"]);
+  expect(await createGnomeBackend(run).list()).toEqual([
+    "Nord",
+    "(original profile)",
+  ]);
 });
 
 test("list handles names with spaces and accents", async () => {
@@ -58,7 +63,8 @@ test("apply on an existing profile overwrites its colors, does not re-append it,
   await createGnomeBackend(run).apply(theme);
 
   const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
-  const written = (suffix: string) => writes.find((c) => c[2]?.endsWith(suffix))?.[3];
+  const written = (suffix: string) =>
+    writes.find((c) => c[2]?.endsWith(suffix))?.[3];
 
   // Write-through: the pre-existing "Nord" profile's colors must be
   // overwritten with the theme's values, not skipped.
@@ -83,12 +89,14 @@ test("apply on an existing profile overwrites its colors, does not re-append it,
 test("apply on a missing profile creates it, writes the colors, and adds it to the list", async () => {
   const { run, calls } = fakeRun({
     ...LIST,
-    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'Other'\n",
   });
   await createGnomeBackend(run).apply(theme);
 
   const writes = calls.filter((c) => c[0] === "dconf" && c[1] === "write");
-  const written = (suffix: string) => writes.find((c) => c[2]?.endsWith(suffix))?.[3];
+  const written = (suffix: string) =>
+    writes.find((c) => c[2]?.endsWith(suffix))?.[3];
 
   expect(written("/visible-name")).toBe("'Nord'");
   expect(written("/background-color")).toBe("'#2e3440'");
@@ -109,7 +117,9 @@ test("a failing command becomes an exception, not a silent success", async () =>
   const run = async () => {
     throw new Error("dconf: permission denied");
   };
-  await expect(createGnomeBackend(run).list()).rejects.toThrow(/permission denied/);
+  await expect(createGnomeBackend(run).list()).rejects.toThrow(
+    /permission denied/,
+  );
 });
 
 test("list unescapes a GVariant-quoted apostrophe in the name", async () => {
@@ -125,7 +135,8 @@ test("apply on a theme named with an apostrophe writes a correctly escaped GVari
   const apostropheTheme: Theme = { ...theme, name: "O'Brien" };
   const { run, calls } = fakeRun({
     ...LIST,
-    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'Other'\n",
   });
   await createGnomeBackend(run).apply(apostropheTheme);
 
@@ -138,7 +149,8 @@ test("a name containing a backslash round-trips through quote/unquote", async ()
   const backslashTheme: Theme = { ...theme, name: "back\\slash" };
   const { run, calls } = fakeRun({
     ...LIST,
-    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: "'Other'\n",
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'Other'\n",
   });
   await createGnomeBackend(run).apply(backslashTheme);
 
@@ -149,8 +161,7 @@ test("a name containing a backslash round-trips through quote/unquote", async ()
   // Round-trip: reading that same escaped literal back should unescape correctly.
   const { run: readRun } = fakeRun({
     ...LIST,
-    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
-      `${visibleName}\n`,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: `${visibleName}\n`,
   });
   expect(await createGnomeBackend(readRun).list()).toContain("back\\slash");
 });

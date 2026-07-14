@@ -24,7 +24,9 @@ export async function runCli(
       try {
         current = await backend.current();
       } catch (error) {
-        out(`warning: could not determine the active theme (${(error as Error).message})`);
+        out(
+          `warning: could not determine the active theme (${(error as Error).message})`,
+        );
       }
       for (const theme of themes) {
         out(theme.name === current ? `* ${theme.name}` : `  ${theme.name}`);
@@ -37,7 +39,9 @@ export async function runCli(
         const current = await backend.current();
         out(current ?? "(none)");
       } catch (error) {
-        out(`error: could not determine the active theme (${(error as Error).message})`);
+        out(
+          `error: could not determine the active theme (${(error as Error).message})`,
+        );
         return 1;
       }
       return 0;
@@ -82,11 +86,11 @@ export async function runCli(
   }
 }
 
+import { dirname, join } from "node:path";
+import { BUILTIN_THEMES } from "./builtin-themes";
 import { createGnomeBackend, realRun } from "./gnome";
 import { loadThemes } from "./theme";
-import { BUILTIN_THEMES } from "./builtin-themes";
 import { runTui } from "./tui";
-import { dirname, join } from "node:path";
 
 /**
  * Resolve the theme catalogue, in order:

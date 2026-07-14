@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test";
-import { parseTheme, loadThemes } from "../src/theme";
-import { mkdtemp, writeFile, chmod } from "node:fs/promises";
+import { chmod, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { loadThemes, parseTheme } from "../src/theme";
 
-const PALETTE = Array.from({ length: 16 }, (_, i) =>
-  `#${i.toString(16).repeat(6)}`,
+const PALETTE = Array.from(
+  { length: 16 },
+  (_, i) => `#${i.toString(16).repeat(6)}`,
 ).map((c) => c.slice(0, 7));
 
 function toml(overrides: Record<string, string> = {}): string {
@@ -40,7 +41,9 @@ test("normalizes rgb() and uppercase colors", () => {
 });
 
 test("rejects a palette that is not exactly 16 colors", () => {
-  const short = `[${PALETTE.slice(0, 15).map((c) => `"${c}"`).join(",")}]`;
+  const short = `[${PALETTE.slice(0, 15)
+    .map((c) => `"${c}"`)
+    .join(",")}]`;
   expect(() => parseTheme(toml({ palette: short }), "short.toml")).toThrow(
     /short\.toml.*16/,
   );
@@ -89,7 +92,9 @@ test("permission denied on unreadable directory is rejected", async () => {
   const dir = await mkdtemp(join(tmpdir(), "ttm-"));
   try {
     await chmod(dir, 0o000);
-    await expect(loadThemes(dir)).rejects.toThrow(/failed to read themes from.*EACCES|permission/i);
+    await expect(loadThemes(dir)).rejects.toThrow(
+      /failed to read themes from.*EACCES|permission/i,
+    );
   } finally {
     // Restore permissions for cleanup
     await chmod(dir, 0o755);

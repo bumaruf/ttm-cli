@@ -9,7 +9,7 @@ function fit(text: string, width: number): string {
   if (width <= 0) return "";
   if (text.length <= width) return text;
   if (width === 1) return "…";
-  return text.slice(0, width - 1) + "…";
+  return `${text.slice(0, width - 1)}…`;
 }
 
 /** Wrap already-fitted visible text in an ANSI style; escape codes never count against width. */

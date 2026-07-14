@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { initialState, reduce, focused, matches, type Key } from "../src/state";
+import { focused, initialState, type Key, matches, reduce } from "../src/state";
 import type { Theme } from "../src/theme";
 
 const theme = (name: string): Theme => ({
@@ -11,7 +11,9 @@ const theme = (name: string): Theme => ({
 
 const THEMES = [theme("Dracula"), theme("Gruvbox"), theme("Nord")];
 const char = (value: string): Key => ({ name: "char", value });
-const key = (name: "up" | "down" | "enter" | "escape" | "backspace"): Key => ({ name });
+const key = (name: "up" | "down" | "enter" | "escape" | "backspace"): Key => ({
+  name,
+});
 
 const feed = (keys: Key[]) => keys.reduce(reduce, initialState(THEMES));
 
@@ -26,12 +28,16 @@ test("starts on the first theme with no filter", () => {
 
 test("down and up move the cursor", () => {
   expect(focused(feed([key("down")]))?.name).toBe("Gruvbox");
-  expect(focused(feed([key("down"), key("down"), key("up")]))?.name).toBe("Gruvbox");
+  expect(focused(feed([key("down"), key("down"), key("up")]))?.name).toBe(
+    "Gruvbox",
+  );
 });
 
 test("cursor wraps at both edges", () => {
   expect(focused(feed([key("up")]))?.name).toBe("Nord");
-  expect(focused(feed([key("down"), key("down"), key("down")]))?.name).toBe("Dracula");
+  expect(focused(feed([key("down"), key("down"), key("down")]))?.name).toBe(
+    "Dracula",
+  );
 });
 
 test("typing filters the list", () => {

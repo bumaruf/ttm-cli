@@ -65,12 +65,22 @@ export function reduce(state: State, key: Key): State {
     case "backspace": {
       if (state.filter === "") return state;
       const filter = state.filter.slice(0, -1);
-      return { ...state, filter, visible: filtered(state.themes, filter), cursor: 0 };
+      return {
+        ...state,
+        filter,
+        visible: filtered(state.themes, filter),
+        cursor: 0,
+      };
     }
 
     case "char": {
       const filter = state.filter + key.value;
-      return { ...state, filter, visible: filtered(state.themes, filter), cursor: 0 };
+      return {
+        ...state,
+        filter,
+        visible: filtered(state.themes, filter),
+        cursor: 0,
+      };
     }
   }
 }

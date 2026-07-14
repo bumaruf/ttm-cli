@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { parseColor, isHex } from "../src/color";
+import { isHex, parseColor } from "../src/color";
 
 test("parses lowercase hex", () => {
   expect(parseColor("#282a36")).toBe("#282a36");

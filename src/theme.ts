@@ -1,6 +1,6 @@
-import { parseColor, type Hex } from "./color";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { type Hex, parseColor } from "./color";
 
 export interface Theme {
   name: string;
@@ -53,6 +53,7 @@ export function parseTheme(source: string, filename: string): Theme {
     );
   }
 
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: fail() returns never, so every path either returns a color or throws.
   const palette = rawPalette.map((entry, index) => {
     if (typeof entry !== "string") {
       fail(filename, `palette[${index}] is not a string`);

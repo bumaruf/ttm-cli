@@ -48,7 +48,8 @@ export function createGnomeBackend(run: Run): Backend {
 
   const uuidFor = async (name: string): Promise<string | null> => {
     for (const uuid of await uuids()) {
-      if ((await nameOf(uuid)).toLowerCase() === name.toLowerCase()) return uuid;
+      if ((await nameOf(uuid)).toLowerCase() === name.toLowerCase())
+        return uuid;
     }
     return null;
   };
@@ -80,8 +81,18 @@ export function createGnomeBackend(run: Run): Backend {
       const palette = `[${theme.palette.map((c) => quote(c)).join(", ")}]`;
 
       await run(["dconf", "write", key("visible-name"), quote(theme.name)]);
-      await run(["dconf", "write", key("background-color"), quote(theme.background)]);
-      await run(["dconf", "write", key("foreground-color"), quote(theme.foreground)]);
+      await run([
+        "dconf",
+        "write",
+        key("background-color"),
+        quote(theme.background),
+      ]);
+      await run([
+        "dconf",
+        "write",
+        key("foreground-color"),
+        quote(theme.foreground),
+      ]);
       await run(["dconf", "write", key("palette"), palette]);
       await run(["dconf", "write", key("use-theme-colors"), "false"]);
 

@@ -2,7 +2,7 @@ import { writeSync } from "node:fs";
 import type { Backend } from "./backend";
 import { applyTheme, resetColors } from "./osc";
 import { render } from "./render";
-import { focused, initialState, reduce, type Key, type State } from "./state";
+import { focused, initialState, type Key, reduce, type State } from "./state";
 import type { Theme } from "./theme";
 
 const ALT_SCREEN_ON = "\x1b[?1049h";

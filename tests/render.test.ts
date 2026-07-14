@@ -11,10 +11,13 @@ const theme = (name: string): Theme => ({
 });
 
 const strip = (s: string) => s.replaceAll(/\x1b\[[0-9;]*m/g, "");
-const many = (n: number) => Array.from({ length: n }, (_, i) => theme(`Theme${i}`));
+const many = (n: number) =>
+  Array.from({ length: n }, (_, i) => theme(`Theme${i}`));
 
 test("renders every theme, marking the focused one", () => {
-  const out = strip(render(initialState([theme("Dracula"), theme("Nord")]), 40, 12));
+  const out = strip(
+    render(initialState([theme("Dracula"), theme("Nord")]), 40, 12),
+  );
   expect(out).toContain("Dracula");
   expect(out).toContain("Nord");
   expect(out).toContain("› Dracula");

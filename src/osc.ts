@@ -1,5 +1,5 @@
-import type { Theme } from "./theme";
 import { isHex } from "./color";
+import type { Theme } from "./theme";
 
 const BEL = "\x07";
 const OSC = "\x1b]";
@@ -8,21 +8,21 @@ export function applyTheme(theme: Theme): string {
   // Validate palette length
   if (theme.palette.length !== 16) {
     throw new Error(
-      `Theme "${theme.name}": palette must have exactly 16 entries (got ${theme.palette.length})`
+      `Theme "${theme.name}": palette must have exactly 16 entries (got ${theme.palette.length})`,
     );
   }
 
   // Validate background color
   if (!isHex(theme.background)) {
     throw new Error(
-      `Theme "${theme.name}": background color must be lowercase #rrggbb format (got ${theme.background})`
+      `Theme "${theme.name}": background color must be lowercase #rrggbb format (got ${theme.background})`,
     );
   }
 
   // Validate foreground color
   if (!isHex(theme.foreground)) {
     throw new Error(
-      `Theme "${theme.name}": foreground color must be lowercase #rrggbb format (got ${theme.foreground})`
+      `Theme "${theme.name}": foreground color must be lowercase #rrggbb format (got ${theme.foreground})`,
     );
   }
 
@@ -31,7 +31,7 @@ export function applyTheme(theme: Theme): string {
     const color = theme.palette[i];
     if (color === undefined || !isHex(color)) {
       throw new Error(
-        `Theme "${theme.name}": palette[${i}] must be lowercase #rrggbb format (got ${color})`
+        `Theme "${theme.name}": palette[${i}] must be lowercase #rrggbb format (got ${color})`,
       );
     }
   }

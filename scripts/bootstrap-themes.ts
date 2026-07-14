@@ -19,7 +19,12 @@ const read = async (uuid: string, key: string): Promise<string> =>
   (await realRun(["dconf", "read", `${BASE}/:${uuid}/${key}`])).trim();
 
 const uuids = parseList(
-  await realRun(["gsettings", "get", "org.gnome.Terminal.ProfilesList", "list"]),
+  await realRun([
+    "gsettings",
+    "get",
+    "org.gnome.Terminal.ProfilesList",
+    "list",
+  ]),
 ).filter(Boolean);
 
 await mkdir("themes", { recursive: true });
@@ -31,7 +36,9 @@ for (const uuid of uuids) {
   const paletteRaw = await read(uuid, "palette");
 
   if (!name || !bgRaw || !fgRaw || !paletteRaw) {
-    console.log(`skipping ${uuid} (${name || "unnamed"}): incomplete color set`);
+    console.log(
+      `skipping ${uuid} (${name || "unnamed"}): incomplete color set`,
+    );
     continue;
   }
 
@@ -48,7 +55,13 @@ for (const uuid of uuids) {
     `foreground = "${parseColor(unquote(fgRaw))}"`,
     "palette = [",
     ...[0, 4, 8, 12].map(
-      (i) => "  " + palette.slice(i, i + 4).map((c) => `"${c}"`).join(", ") + ",",
+      (i) =>
+        "  " +
+        palette
+          .slice(i, i + 4)
+          .map((c) => `"${c}"`)
+          .join(", ") +
+        ",",
     ),
     "]",
     "",

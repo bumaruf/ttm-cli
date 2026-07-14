@@ -1,11 +1,12 @@
-import { expect, test, afterEach } from "bun:test";
-import { resolveThemes } from "../src/cli";
-import { mkdtemp, writeFile, mkdir, rm } from "node:fs/promises";
+import { afterEach, expect, test } from "bun:test";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { resolveThemes } from "../src/cli";
 
-const PALETTE = Array.from({ length: 16 }, (_, i) =>
-  `#${i.toString(16).repeat(6)}`,
+const PALETTE = Array.from(
+  { length: 16 },
+  (_, i) => `#${i.toString(16).repeat(6)}`,
 ).map((c) => c.slice(0, 7));
 
 function themeToml(name: string): string {

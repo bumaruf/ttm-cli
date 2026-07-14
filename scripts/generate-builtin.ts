@@ -6,7 +6,7 @@
 //
 // Run via `bun run scripts/generate-builtin.ts` — wired into `bun run build`.
 
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadThemes } from "../src/theme";
 

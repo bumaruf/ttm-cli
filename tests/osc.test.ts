@@ -6,7 +6,10 @@ const theme: Theme = {
   name: "T",
   background: "#000000",
   foreground: "#ffffff",
-  palette: Array.from({ length: 16 }, (_, i) => `#0000${i.toString(16)}${i.toString(16)}`),
+  palette: Array.from(
+    { length: 16 },
+    (_, i) => `#0000${i.toString(16)}${i.toString(16)}`,
+  ),
 };
 
 test("emits one OSC 4 per palette color, then fg and bg", () => {
@@ -39,7 +42,7 @@ test("applyTheme throws if palette has fewer than 16 entries", () => {
     palette: theme.palette.slice(0, 15),
   };
   expect(() => applyTheme(shortPalette)).toThrow(
-    /palette must have exactly 16 entries/
+    /palette must have exactly 16 entries/,
   );
 });
 
@@ -49,7 +52,7 @@ test("applyTheme throws if palette has more than 16 entries", () => {
     palette: [...theme.palette, "#000000"],
   };
   expect(() => applyTheme(longPalette)).toThrow(
-    /palette must have exactly 16 entries/
+    /palette must have exactly 16 entries/,
   );
 });
 
@@ -63,7 +66,7 @@ test("applyTheme throws on injected OSC escape in palette color", () => {
     ],
   };
   expect(() => applyTheme(injected)).toThrow(
-    /palette\[5\] must be lowercase #rrggbb format/
+    /palette\[5\] must be lowercase #rrggbb format/,
   );
 });
 
@@ -73,7 +76,7 @@ test("applyTheme throws on injected OSC escape in foreground color", () => {
     foreground: "#ffffff;\x07\x1b]0;pwned",
   };
   expect(() => applyTheme(injected)).toThrow(
-    /foreground color must be lowercase #rrggbb format/
+    /foreground color must be lowercase #rrggbb format/,
   );
 });
 
@@ -83,7 +86,7 @@ test("applyTheme throws on injected OSC escape in background color", () => {
     background: "#000000;\x07\x1b]0;pwned",
   };
   expect(() => applyTheme(injected)).toThrow(
-    /background color must be lowercase #rrggbb format/
+    /background color must be lowercase #rrggbb format/,
   );
 });
 
@@ -97,7 +100,7 @@ test("applyTheme throws on uppercase hex (not normalized)", () => {
     ],
   };
   expect(() => applyTheme(uppercase)).toThrow(
-    /palette\[3\] must be lowercase #rrggbb format/
+    /palette\[3\] must be lowercase #rrggbb format/,
   );
 });
 

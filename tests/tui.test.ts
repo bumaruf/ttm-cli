@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { applyTheme, resetColors } from "../src/osc";
-import { parseKeys, runTui, teardownSequence, type TuiIo } from "../src/tui";
 import type { Backend } from "../src/backend";
+import { applyTheme, resetColors } from "../src/osc";
 import type { Theme } from "../src/theme";
+import { parseKeys, runTui, type TuiIo, teardownSequence } from "../src/tui";
 
 const CURSOR_SHOW = "\x1b[?25h";
 const ALT_SCREEN_OFF = "\x1b[?1049l";
@@ -70,11 +70,16 @@ test("an unknown CSI sequence is skipped without eating neighbouring keys", () =
 
 test("a chunk ending in a dangling escape sequence does not crash", () => {
   expect(() => parseKeys("a\x1b[")).not.toThrow();
-  expect(parseKeys("a\x1b[")).toEqual([{ name: "char", value: "a" }, { name: "escape" }]);
+  expect(parseKeys("a\x1b[")).toEqual([
+    { name: "char", value: "a" },
+    { name: "escape" },
+  ]);
 });
 
 test("teardownSequence resets colors then restores cursor and alt-screen on cancel", () => {
-  expect(teardownSequence(true)).toBe(resetColors() + CURSOR_SHOW + ALT_SCREEN_OFF);
+  expect(teardownSequence(true)).toBe(
+    resetColors() + CURSOR_SHOW + ALT_SCREEN_OFF,
+  );
 });
 
 test("teardownSequence skips color reset on apply, keeping the applied theme", () => {
