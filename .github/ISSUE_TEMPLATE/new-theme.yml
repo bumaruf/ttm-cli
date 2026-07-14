@@ -1,0 +1,43 @@
+name: Theme request
+description: Ask for a color theme to be added.
+labels: ["theme"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A pull request is faster than this issue, and you don't need to write any code.**
+
+        A theme is a single file. Copy `themes/nord.toml`, change the values,
+        drop it in `themes/`, open a PR — that's the whole contribution. See
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#adding-a-theme).
+
+        Open this issue only if you'd rather someone else do it, or if you're
+        unsure whether the theme fits the project.
+
+  - type: input
+    id: name
+    attributes:
+      label: Theme name
+      placeholder: "Catppuccin Latte"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Where are the official colors defined?
+      description: |
+        A link to the upstream palette — the theme's own repo or spec. We copy
+        colors from the source of truth, not from a screenshot.
+      placeholder: "https://github.com/catppuccin/catppuccin"
+    validations:
+      required: true
+
+  - type: textarea
+    id: palette
+    attributes:
+      label: Colors (optional)
+      description: |
+        If you already have them, paste the background, foreground and the 16
+        ANSI colors. Saves a round trip.
+      render: toml

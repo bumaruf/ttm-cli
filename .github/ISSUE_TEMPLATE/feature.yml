@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest something ttm should do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Support for another terminal emulator? That's a `Backend` implementation
+        — see [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#adding-a-backend).
+        Say which emulator and how it stores its colors, and we'll work out
+        whether the existing interface covers it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you hitting?
+      description: |
+        Describe the situation, not the solution. What were you trying to do
+        when ttm got in your way?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What did you try instead?
+      description: Workarounds, other tools, or why the existing commands don't cover it.

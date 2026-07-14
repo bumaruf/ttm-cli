@@ -1,0 +1,80 @@
+name: Bug report
+description: Something in ttm behaves the wrong way.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this.
+
+        If ttm left your terminal in a broken state (no echo, stuck colors, an
+        unusable prompt), say so in the dedicated field below — that is the most
+        serious failure this tool can have, and it gets priority.
+
+  - type: input
+    id: version
+    attributes:
+      label: ttm version
+      description: Output of `ttm --version`, or the release/commit you installed.
+      placeholder: "0.1.4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it?
+      options:
+        - npm
+        - prebuilt binary from Releases
+        - .deb package
+        - built from source
+    validations:
+      required: true
+
+  - type: input
+    id: terminal
+    attributes:
+      label: Terminal emulator and version
+      description: GNOME Terminal is the only supported backend today.
+      placeholder: "GNOME Terminal 3.44.0 (VTE 0.68)"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / distribution
+      placeholder: "Pop!_OS 22.04"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, key by key if it matters?
+      placeholder: |
+        1. Run `ttm`
+        2. Press Down twice
+        3. Press Enter
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: terminal-state
+    attributes:
+      label: Did it leave your terminal in a bad state?
+      description: |
+        Stuck in the theme's colors after cancelling? No echo? Cursor gone?
+        Alt-screen not restored? Describe it, and how you recovered (`reset`?).
+        If nothing like this happened, write "no".
+    validations:
+      required: true
