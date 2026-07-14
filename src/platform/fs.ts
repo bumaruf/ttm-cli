@@ -1,5 +1,11 @@
 // src/fs.ts
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+} from "node:fs/promises";
 import { dirname } from "node:path";
 
 export interface Fs {
@@ -8,6 +14,8 @@ export interface Fs {
   writeFile(path: string, contents: string): Promise<void>;
   mkdirp(path: string): Promise<void>;
   copyFile(from: string, to: string): Promise<void>;
+  /** Filenames directly under `dir` ([] if it does not exist). */
+  list(dir: string): Promise<string[]>;
 }
 
 export const realFs: Fs = {
@@ -26,6 +34,15 @@ export const realFs: Fs = {
   },
   async copyFile(from, to) {
     await copyFile(from, to);
+  },
+  async list(dir) {
+    try {
+      return await readdir(dir);
+    } catch (error) {
+      const err = error as NodeJS.ErrnoException;
+      if (err.code === "ENOENT") return [];
+      throw error;
+    }
   },
 };
 
@@ -56,6 +73,17 @@ export function createMemoryFs(
         throw new Error(`ENOENT: no such file: ${from}`);
       }
       files[to] = contents;
+    },
+    async list(dir) {
+      const prefix = dir.endsWith("/") ? dir : `${dir}/`;
+      const names = new Set<string>();
+      for (const path of Object.keys(files)) {
+        if (!path.startsWith(prefix)) continue;
+        const rest = path.slice(prefix.length);
+        if (rest === "" || rest.includes("/")) continue;
+        names.add(rest);
+      }
+      return [...names];
     },
   };
 }

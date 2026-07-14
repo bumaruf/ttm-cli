@@ -25,6 +25,30 @@ function window(count: number, cursor: number, rows: number): [number, number] {
   return [start, start + rows];
 }
 
+/**
+ * The plain-text body for one row: cursor prefix, name, and — if it fits —
+ * the contributor. When width is tight the contributor is dropped first; the
+ * name is what matters and is never truncated before it.
+ */
+function rowBody(
+  prefix: string,
+  name: string,
+  contributor: string | undefined,
+  markerWidth: number,
+  width: number,
+): { text: string; contributor: string | null } {
+  const available = Math.max(0, width - markerWidth);
+
+  if (contributor) {
+    const withContributor = `${prefix}${name}   ${contributor}`;
+    if (withContributor.length < available) {
+      return { text: `${prefix}${name}   `, contributor };
+    }
+  }
+
+  return { text: fit(`${prefix}${name}`, available), contributor: null };
+}
+
 export function render(state: State, width: number, height: number): string {
   const w = Math.max(0, width);
   const h = Math.max(0, height);
@@ -46,8 +70,28 @@ export function render(state: State, width: number, height: number): string {
     for (const item of state.visible.slice(start, end)) {
       const isFocused = item === current;
       const prefix = isFocused ? "› " : "  ";
-      const visible = fit(`${prefix}${item.name}`, Math.max(0, w - 2));
-      lines.push(isFocused ? `  ${styled(REVERSE, visible)}` : `  ${visible}`);
+      const marker = item.origin === "remote" ? " ↓" : "";
+      const { text, contributor } = rowBody(
+        prefix,
+        item.theme.name,
+        item.theme.contributor,
+        marker.length,
+        Math.max(0, w - 2),
+      );
+
+      const plain = `${text}${contributor ?? ""}${marker}`;
+      let visible: string;
+      if (isFocused) {
+        // Already reversed: no nested dimming, or the contributor's own
+        // RESET would end the reverse video early.
+        visible = styled(REVERSE, plain);
+      } else {
+        visible = contributor
+          ? `${text}${styled(DIM, contributor)}${marker}`
+          : plain;
+      }
+
+      lines.push(`  ${visible}`);
     }
   }
 

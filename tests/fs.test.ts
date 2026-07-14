@@ -25,3 +25,18 @@ test("copyFile duplicates content", async () => {
   await fs.copyFile("/a", "/a.bak");
   expect(await fs.readFile("/a.bak")).toBe("one");
 });
+
+test("list returns the filenames directly under a directory", async () => {
+  const fs = createMemoryFs({
+    "/dir/a.toml": "a",
+    "/dir/b.toml": "b",
+    "/dir/sub/c.toml": "c",
+    "/other/d.toml": "d",
+  });
+  expect((await fs.list("/dir")).sort()).toEqual(["a.toml", "b.toml"]);
+});
+
+test("list on a directory that does not exist returns an empty array", async () => {
+  const fs = createMemoryFs();
+  expect(await fs.list("/nope")).toEqual([]);
+});

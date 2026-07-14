@@ -1,3 +1,4 @@
+import type { Entry } from "../catalogue/merge";
 import type { Theme } from "../core/theme";
 
 export type Key =
@@ -10,9 +11,9 @@ export interface Exit {
 }
 
 export interface State {
-  themes: Theme[];
+  entries: Entry[];
   filter: string;
-  visible: Theme[];
+  visible: Entry[];
   cursor: number;
   exit: Exit | null;
 }
@@ -28,15 +29,15 @@ export function matches(query: string, name: string): boolean {
   return i === q.length;
 }
 
-function filtered(themes: Theme[], filter: string): Theme[] {
-  return themes.filter((t) => matches(filter, t.name));
+function filtered(entries: Entry[], filter: string): Entry[] {
+  return entries.filter((e) => matches(filter, e.theme.name));
 }
 
-export function initialState(themes: Theme[]): State {
-  return { themes, filter: "", visible: [...themes], cursor: 0, exit: null };
+export function initialState(entries: Entry[]): State {
+  return { entries, filter: "", visible: [...entries], cursor: 0, exit: null };
 }
 
-export function focused(state: State): Theme | null {
+export function focused(state: State): Entry | null {
   return state.visible[state.cursor] ?? null;
 }
 
@@ -48,9 +49,9 @@ export function reduce(state: State, key: Key): State {
       return { ...state, exit: { apply: null, resetColors: true } };
 
     case "enter": {
-      const theme = focused(state);
-      if (!theme) return state;
-      return { ...state, exit: { apply: theme, resetColors: false } };
+      const entry = focused(state);
+      if (!entry) return state;
+      return { ...state, exit: { apply: entry.theme, resetColors: false } };
     }
 
     case "up":
@@ -68,7 +69,7 @@ export function reduce(state: State, key: Key): State {
       return {
         ...state,
         filter,
-        visible: filtered(state.themes, filter),
+        visible: filtered(state.entries, filter),
         cursor: 0,
       };
     }
@@ -78,7 +79,7 @@ export function reduce(state: State, key: Key): State {
       return {
         ...state,
         filter,
-        visible: filtered(state.themes, filter),
+        visible: filtered(state.entries, filter),
         cursor: 0,
       };
     }
