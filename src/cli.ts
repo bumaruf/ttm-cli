@@ -92,6 +92,7 @@ import { createAlacrittyBackend } from "./alacritty";
 import { BUILTIN_THEMES } from "./builtin-themes";
 import { realFs } from "./fs";
 import { createGnomeBackend, realRun } from "./gnome";
+import { createKittyBackend } from "./kitty";
 import { selectBackend } from "./registry";
 import { loadThemes } from "./theme";
 import { runTui } from "./tui";
@@ -140,6 +141,7 @@ if (import.meta.main) {
     createGnomeBackend(realRun),
     createWindowsTerminalBackend(realFs, process.env),
     createAlacrittyBackend(realFs, process.env, process.platform),
+    createKittyBackend(realFs, realRun, process.env),
   ];
   const selection = selectBackend(backends, process.env, requested);
 
