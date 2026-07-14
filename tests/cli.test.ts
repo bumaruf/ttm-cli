@@ -15,7 +15,10 @@ const THEMES = [theme("Dracula"), theme("Nord")];
 function fakeBackend() {
   const applied: string[] = [];
   const backend: Backend = {
-    list: async () => THEMES.map((t) => t.name),
+    id: "fake",
+    name: "Fake",
+    detect: () => true,
+    isInstalled: async () => true,
     current: async () => "Nord",
     apply: async (t) => {
       applied.push(t.name);

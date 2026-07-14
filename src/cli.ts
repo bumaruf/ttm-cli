@@ -8,6 +8,7 @@ const USAGE = `ttm — pick a terminal theme and see it live
   ttm list            list available themes
   ttm current         print the active theme
   ttm apply <name>    apply a theme by name
+  ttm --backend <id>  force a terminal backend (gnome)
   ttm --help          show this help`;
 
 export async function runCli(
@@ -89,6 +90,7 @@ export async function runCli(
 import { dirname, join } from "node:path";
 import { BUILTIN_THEMES } from "./builtin-themes";
 import { createGnomeBackend, realRun } from "./gnome";
+import { selectBackend } from "./registry";
 import { loadThemes } from "./theme";
 import { runTui } from "./tui";
 
@@ -116,7 +118,30 @@ export async function resolveThemes(
 }
 
 if (import.meta.main) {
-  const backend = createGnomeBackend(realRun);
+  const argv = process.argv.slice(2);
+
+  // `--backend <id>` can appear anywhere; strip it from argv before parsing
+  // the rest of the command line.
+  let requested: string | undefined;
+  const flagIndex = argv.indexOf("--backend");
+  if (flagIndex !== -1) {
+    requested = argv[flagIndex + 1];
+    argv.splice(flagIndex, 2);
+    if (!requested) {
+      console.error("usage: ttm --backend <id>");
+      process.exit(1);
+    }
+  }
+
+  const backends = [createGnomeBackend(realRun)];
+  const selection = selectBackend(backends, process.env, requested);
+
+  if ("error" in selection) {
+    console.error(selection.error);
+    process.exit(1);
+  }
+
+  const backend = selection.backend;
   const themes = await resolveThemes();
 
   if (themes.length === 0) {
@@ -125,8 +150,6 @@ if (import.meta.main) {
     );
     process.exit(1);
   }
-
-  const argv = process.argv.slice(2);
 
   if (argv.length === 0) {
     const applied = await runTui(themes, backend);

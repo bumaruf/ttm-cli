@@ -117,8 +117,11 @@ function fakeBackend(applyImpl?: (t: Theme) => Promise<void>): Backend & {
   const applyCalls: Theme[] = [];
   return {
     applyCalls,
-    async list() {
-      return THEMES.map((t) => t.name);
+    id: "fake",
+    name: "Fake",
+    detect: () => true,
+    async isInstalled() {
+      return true;
     },
     async current() {
       return null;
@@ -135,7 +138,10 @@ function fakeBackend(applyImpl?: (t: Theme) => Promise<void>): Backend & {
  * fed to the "input" async iterable one at a time; when exhausted the
  * iterable ends, simulating stdin EOF.
  */
-function fakeIo(chunks: string[]) {
+function fakeIo(
+  chunks: string[],
+  overrides?: { onSignal?: TuiIo["onSignal"] },
+) {
   const written: string[] = [];
   const syncWritten: string[] = [];
   const rawModeCalls: boolean[] = [];
@@ -150,7 +156,7 @@ function fakeIo(chunks: string[]) {
     writeSync: (s) => syncWritten.push(s),
     setRawMode: (on) => rawModeCalls.push(on),
     size: () => ({ columns: 80, rows: 24 }),
-    onSignal: () => () => {},
+    onSignal: overrides?.onSignal ?? (() => () => {}),
     start: () => {},
     stop: () => {},
   };

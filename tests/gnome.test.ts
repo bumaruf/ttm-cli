@@ -36,26 +36,47 @@ const LIST = {
     "\n",
 };
 
-test("list parses dconf quoting and names the unnamed profile", async () => {
+test("detects GNOME Terminal from the environment", () => {
   const { run } = fakeRun(LIST);
-  expect(await createGnomeBackend(run).list()).toEqual([
-    "Nord",
-    "(original profile)",
-  ]);
+  const backend = createGnomeBackend(run);
+  expect(backend.detect({ GNOME_TERMINAL_SCREEN: "/org/x" })).toBe(true);
+  expect(backend.detect({ GNOME_TERMINAL_SERVICE: ":1.2" })).toBe(true);
+  expect(backend.detect({ WT_SESSION: "abc" })).toBe(false);
+  expect(backend.detect({})).toBe(false);
 });
 
-test("list handles names with spaces and accents", async () => {
-  const { run } = fakeRun({
-    ...LIST,
-    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
-      "'Solarized Café'\n",
+test("isInstalled is true when gsettings succeeds", async () => {
+  const { run } = fakeRun(LIST);
+  expect(await createGnomeBackend(run).isInstalled()).toBe(true);
+});
+
+test("isInstalled is false when gsettings fails", async () => {
+  const backend = createGnomeBackend(async () => {
+    throw new Error("gsettings: not found");
   });
-  expect(await createGnomeBackend(run).list()).toContain("Solarized Café");
+  expect(await backend.isInstalled()).toBe(false);
 });
 
 test("current returns the default profile name", async () => {
   const { run } = fakeRun(LIST);
   expect(await createGnomeBackend(run).current()).toBe("Nord");
+});
+
+test("current names an unnamed profile", async () => {
+  const { run } = fakeRun({
+    ...LIST,
+    "gsettings get org.gnome.Terminal.ProfilesList default": `'${UUID_B}'\n`,
+  });
+  expect(await createGnomeBackend(run).current()).toBe("(original profile)");
+});
+
+test("current handles names with spaces and accents", async () => {
+  const { run } = fakeRun({
+    ...LIST,
+    [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
+      "'Solarized Café'\n",
+  });
+  expect(await createGnomeBackend(run).current()).toBe("Solarized Café");
 });
 
 test("apply on an existing profile overwrites its colors, does not re-append it, and repoints default", async () => {
@@ -117,18 +138,18 @@ test("a failing command becomes an exception, not a silent success", async () =>
   const run = async () => {
     throw new Error("dconf: permission denied");
   };
-  await expect(createGnomeBackend(run).list()).rejects.toThrow(
+  await expect(createGnomeBackend(run).current()).rejects.toThrow(
     /permission denied/,
   );
 });
 
-test("list unescapes a GVariant-quoted apostrophe in the name", async () => {
+test("current unescapes a GVariant-quoted apostrophe in the name", async () => {
   const { run } = fakeRun({
     ...LIST,
     [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]:
       "'O\\'Brien'\n",
   });
-  expect(await createGnomeBackend(run).list()).toContain("O'Brien");
+  expect(await createGnomeBackend(run).current()).toBe("O'Brien");
 });
 
 test("apply on a theme named with an apostrophe writes a correctly escaped GVariant literal", async () => {
@@ -161,7 +182,8 @@ test("a name containing a backslash round-trips through quote/unquote", async ()
   // Round-trip: reading that same escaped literal back should unescape correctly.
   const { run: readRun } = fakeRun({
     ...LIST,
+    "gsettings get org.gnome.Terminal.ProfilesList default": `'${UUID_A}'\n`,
     [`dconf read /org/gnome/terminal/legacy/profiles:/:${UUID_A}/visible-name`]: `${visibleName}\n`,
   });
-  expect(await createGnomeBackend(readRun).list()).toContain("back\\slash");
+  expect(await createGnomeBackend(readRun).current()).toBe("back\\slash");
 });
