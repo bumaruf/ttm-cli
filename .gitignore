@@ -7,3 +7,6 @@ node_modules/
 dist/
 *.log
 *.deb
+
+# Bun-only project — npm lockfile must not come back
+package-lock.json

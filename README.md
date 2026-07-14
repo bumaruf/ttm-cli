@@ -101,15 +101,22 @@ Nothing else in the codebase needs to change — the picker, the live preview, a
 ## Development
 
 ```bash
-bun install
+bun install     # also installs the git hooks
 bun test
+bun run lint
 bun run typecheck
 bun run build
 ```
 
 `ttm` has zero runtime dependencies. It's written in TypeScript, run and built with [Bun](https://bun.sh), and compiled to a standalone binary via `bun build --compile`.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
+## Contributing
+
+Contributions are welcome — [CONTRIBUTING.md](CONTRIBUTING.md) has the details.
+
+**Adding a theme needs no code at all**: copy `themes/nord.toml`, change the colors, open a PR. That's the whole contribution.
+
+Everything that decides behavior is a pure function, and the single module that touches the terminal is kept small on purpose — so a change can be reviewed by someone who didn't write it.
 
 ## License
 
