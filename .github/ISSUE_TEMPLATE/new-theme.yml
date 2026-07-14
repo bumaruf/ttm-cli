@@ -9,7 +9,8 @@ body:
 
         A theme is a single file. Copy `themes/nord.toml`, change the values,
         drop it in `themes/`, open a PR — that's the whole contribution. See
-        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#adding-a-theme).
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#adding-a-theme) and the
+        full contract in [THEME_SPEC.md](../blob/main/THEME_SPEC.md).
 
         Open this issue only if you'd rather someone else do it, or if you're
         unsure whether the theme fits the project.

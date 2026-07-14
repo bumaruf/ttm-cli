@@ -27,11 +27,13 @@ docs: explain why cancelling leaves no trace
 ```
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `ci`, `build`, `chore`,
-`perf`, `style`. Scope is optional. The description is lowercase and imperative.
+`perf`, `style`, `theme`. Scope is optional. The description is lowercase and
+imperative.
 
-`feat` bumps the minor version, `fix` bumps the patch. Everything else is
-invisible to the changelog. That is the whole release process — you never touch
-the version number.
+`feat` bumps the minor version, `fix` bumps the patch. Everything else —
+including `theme` — is invisible to the changelog and does not trigger a
+release. That is the whole release process — you never touch the version
+number.
 
 ## What a PR should carry
 
@@ -42,12 +44,22 @@ the version number.
 
 ## Adding a theme
 
-The most common contribution, and it needs no code.
+The most common contribution, and it needs no code. The full contract —
+required fields, the exact contrast thresholds, filenames, credit rules — is
+[THEME_SPEC.md](THEME_SPEC.md). Read it before opening the PR; it's short and
+a CI gate (`theme-check`) enforces every rule in it, including contrast
+(WCAG), so a theme that's unreadable on its own background is rejected
+automatically, with the numbers in the error message — not by a reviewer
+squinting at hex.
 
 Copy `themes/nord.toml`, change the values, drop it in `themes/`:
 
 ```toml
 name = "Nord"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://www.nordtheme.com/docs/colors-and-palettes"
+license = "MIT"
 background = "#2e3440"
 foreground = "#d8dee9"
 palette = [
@@ -65,6 +77,10 @@ Run `bun run build` before you commit: it regenerates `src/builtin-themes.ts`
 (the catalogue embedded in the standalone binary). CI fails if that file is
 stale, and that is on purpose — a binary shipping a catalogue that differs from
 `themes/` would be a silent lie.
+
+A theme PR carries no code, so it must not trigger an npm release: use the
+`theme:` commit type for its title, e.g. `theme: add Catppuccin Latte` (see
+"Commit and PR titles" above, and THEME_SPEC.md).
 
 ## Adding a backend
 
