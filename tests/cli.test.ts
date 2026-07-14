@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Backend } from "../src/backends/backend";
+import type { Entry } from "../src/catalogue/merge";
 import { runCli } from "../src/cli";
 import type { Theme } from "../src/core/theme";
 
@@ -10,7 +11,11 @@ const theme = (name: string): Theme => ({
   palette: Array.from({ length: 16 }, () => "#000000"),
 });
 
-const THEMES = [theme("Dracula"), theme("Nord")];
+const ENTRIES: Entry[] = [
+  { theme: theme("Dracula"), origin: "builtin" },
+  { theme: theme("Nord"), origin: "builtin" },
+  { theme: theme("Zenburn"), origin: "remote" },
+];
 
 function fakeBackend() {
   const applied: string[] = [];
@@ -51,7 +56,7 @@ function capture() {
 test("list prints every theme and marks the current one", async () => {
   const { backend } = fakeBackend();
   const { out, text } = capture();
-  expect(await runCli(["list"], backend, THEMES, out)).toBe(0);
+  expect(await runCli(["list"], backend, ENTRIES, out)).toBe(0);
   expect(text()).toContain("Dracula");
   expect(text()).toContain("* Nord");
 });
@@ -59,21 +64,21 @@ test("list prints every theme and marks the current one", async () => {
 test("current prints the active theme", async () => {
   const { backend } = fakeBackend();
   const { out, text } = capture();
-  expect(await runCli(["current"], backend, THEMES, out)).toBe(0);
+  expect(await runCli(["current"], backend, ENTRIES, out)).toBe(0);
   expect(text().trim()).toBe("Nord");
 });
 
 test("apply applies the named theme, case-insensitively", async () => {
   const { backend, applied } = fakeBackend();
   const { out } = capture();
-  expect(await runCli(["apply", "dracula"], backend, THEMES, out)).toBe(0);
+  expect(await runCli(["apply", "dracula"], backend, ENTRIES, out)).toBe(0);
   expect(applied).toEqual(["Dracula"]);
 });
 
 test("apply with an unknown theme exits non-zero with a useful message", async () => {
   const { backend, applied } = fakeBackend();
   const { out, text } = capture();
-  expect(await runCli(["apply", "solarized"], backend, THEMES, out)).toBe(1);
+  expect(await runCli(["apply", "solarized"], backend, ENTRIES, out)).toBe(1);
   expect(applied).toEqual([]);
   expect(text()).toContain("solarized");
   expect(text()).toContain("Dracula");
@@ -82,20 +87,20 @@ test("apply with an unknown theme exits non-zero with a useful message", async (
 test("apply with no argument exits non-zero", async () => {
   const { backend } = fakeBackend();
   const { out } = capture();
-  expect(await runCli(["apply"], backend, THEMES, out)).toBe(1);
+  expect(await runCli(["apply"], backend, ENTRIES, out)).toBe(1);
 });
 
 test("help exits zero and shows the commands", async () => {
   const { backend } = fakeBackend();
   const { out, text } = capture();
-  expect(await runCli(["--help"], backend, THEMES, out)).toBe(0);
+  expect(await runCli(["--help"], backend, ENTRIES, out)).toBe(0);
   expect(text()).toContain("ttm apply");
 });
 
 test("an unknown command exits non-zero", async () => {
   const { backend } = fakeBackend();
   const { out } = capture();
-  expect(await runCli(["frobnicate"], backend, THEMES, out)).toBe(1);
+  expect(await runCli(["frobnicate"], backend, ENTRIES, out)).toBe(1);
 });
 
 // `ttm --help` must work with no backend resolved at all. A machine with no
@@ -104,9 +109,59 @@ test("an unknown command exits non-zero", async () => {
 // detection fails. Requiring a backend first made `--help` unreachable there.
 test("--help does not need a backend and lists them", async () => {
   const { out, text } = capture();
-  const code = await runCli(["--help"], failingBackend(), THEMES, out);
+  const code = await runCli(["--help"], failingBackend(), ENTRIES, out);
   expect(code).toBe(0);
   expect(text()).toContain("ttm apply");
   expect(text()).toContain("gnome");
   expect(text()).toContain("windows-terminal");
+});
+
+test("list marks what is not installed yet", async () => {
+  const { backend } = fakeBackend();
+  const { out, text } = capture();
+  await runCli(["list"], backend, ENTRIES, out);
+  expect(text()).toMatch(/Zenburn.*↓/);
+});
+
+test("update reports how many themes the catalogue has", async () => {
+  const { backend } = fakeBackend();
+  const { out, text } = capture();
+  const code = await runCli(["update"], backend, ENTRIES, out, {
+    refresh: async () => ({ themes: [], source: "network" as const }),
+  });
+  expect(code).toBe(0);
+  expect(text()).toMatch(/catalogue/i);
+});
+
+// Never apply what we failed to store.
+test("apply of a remote theme installs it first, and aborts if that fails", async () => {
+  const { backend, applied } = fakeBackend();
+  const { out, text } = capture();
+
+  const code = await runCli(["apply", "Zenburn"], backend, ENTRIES, out, {
+    install: async () => {
+      throw new Error("disk full");
+    },
+  });
+
+  expect(code).toBe(1);
+  expect(applied).toEqual([]);
+  expect(text()).toMatch(/disk full/);
+});
+
+test("apply of a remote theme installs it, then applies it", async () => {
+  const { backend, applied } = fakeBackend();
+  const { out } = capture();
+  const installed: string[] = [];
+
+  const code = await runCli(["apply", "Zenburn"], backend, ENTRIES, out, {
+    install: async (theme) => {
+      installed.push(theme.name);
+      return `/config/${theme.name}.toml`;
+    },
+  });
+
+  expect(code).toBe(0);
+  expect(installed).toEqual(["Zenburn"]);
+  expect(applied).toEqual(["Zenburn"]);
 });

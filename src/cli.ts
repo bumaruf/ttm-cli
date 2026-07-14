@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 import type { Backend } from "./backends/backend";
+import type { Entry } from "./catalogue/merge";
+import type { RemoteResult } from "./catalogue/remote";
 import type { Theme } from "./core/theme";
 
 export const USAGE = `ttm — pick a terminal theme and see it live
@@ -8,17 +10,40 @@ export const USAGE = `ttm — pick a terminal theme and see it live
   ttm list            list available themes
   ttm current         print the active theme
   ttm apply <name>    apply a theme by name
+  ttm update          refresh the community catalogue
   ttm --backend <id>  force a terminal backend
   ttm --help          show this help
 
 backends: gnome, windows-terminal, alacritty, kitty, iterm2`;
 
+/**
+ * Dependencies runCli needs beyond the catalogue and the backend, injectable
+ * so tests never touch the real disk or network.
+ */
+export interface CliDeps {
+  /** Write the theme to disk. Only called for a theme not already installed. */
+  install: (theme: Theme) => Promise<string>;
+  /** Force a refetch of the remote catalogue. */
+  refresh: () => Promise<RemoteResult>;
+}
+
+const installUnavailable: CliDeps["install"] = () => {
+  throw new Error("install is not available in this context");
+};
+
+const refreshUnavailable: CliDeps["refresh"] = () => {
+  throw new Error("refresh is not available in this context");
+};
+
 export async function runCli(
   argv: string[],
   backend: Backend,
-  themes: Theme[],
+  entries: Entry[],
   out: (s: string) => void,
+  deps: Partial<CliDeps> = {},
 ): Promise<number> {
+  const install = deps.install ?? installUnavailable;
+  const refresh = deps.refresh ?? refreshUnavailable;
   const [command, ...rest] = argv;
 
   switch (command) {
@@ -31,8 +56,10 @@ export async function runCli(
           `warning: could not determine the active theme (${(error as Error).message})`,
         );
       }
-      for (const theme of themes) {
-        out(theme.name === current ? `* ${theme.name}` : `  ${theme.name}`);
+      for (const entry of entries) {
+        const marker = entry.theme.name === current ? "*" : " ";
+        const notInstalled = entry.origin === "remote" ? " ↓" : "";
+        out(`${marker} ${entry.theme.name}${notInstalled}`);
       }
       return 0;
     }
@@ -50,22 +77,41 @@ export async function runCli(
       return 0;
     }
 
+    case "update": {
+      const result = await refresh();
+      if (result.warning) out(`warning: ${result.warning}`);
+      out(`catalogue: ${result.themes.length} themes (${result.source})`);
+      return 0;
+    }
+
     case "apply": {
       const name = rest.join(" ").trim();
       if (name === "") {
         out("usage: ttm apply <name>");
         return 1;
       }
-      const theme = themes.find(
-        (t) => t.name.toLowerCase() === name.toLowerCase(),
+      const entry = entries.find(
+        (e) => e.theme.name.toLowerCase() === name.toLowerCase(),
       );
-      if (!theme) {
+      if (!entry) {
         out(`unknown theme: ${name}`);
         out("");
         out("available:");
-        for (const t of themes) out(`  ${t.name}`);
+        for (const e of entries) out(`  ${e.theme.name}`);
         return 1;
       }
+      const theme = entry.theme;
+
+      // Never apply what we failed to store: install before backend.apply.
+      if (entry.origin === "remote") {
+        try {
+          await install(theme);
+        } catch (error) {
+          out(`error: could not install theme (${(error as Error).message})`);
+          return 1;
+        }
+      }
+
       try {
         await backend.apply(theme);
       } catch (error) {
@@ -102,6 +148,9 @@ import { createIterm2Backend } from "./backends/iterm2";
 import { createKittyBackend } from "./backends/kitty";
 import { selectBackend } from "./backends/registry";
 import { createWindowsTerminalBackend } from "./backends/windows-terminal";
+import { installTheme, loadInstalled } from "./catalogue/install";
+import { mergeCatalogue } from "./catalogue/merge";
+import { fetchCatalogue } from "./catalogue/remote";
 import { loadThemes } from "./core/theme";
 import { BUILTIN_THEMES } from "./generated/builtin-themes";
 import { realFs } from "./platform/fs";
@@ -169,27 +218,54 @@ if (import.meta.main) {
   }
 
   const backend = selection.backend;
-  const themes = await resolveThemes();
+  const builtin = await resolveThemes();
 
-  if (themes.length === 0) {
+  if (builtin.length === 0) {
     console.error(
       "no themes found (checked TTM_THEMES, the on-disk themes/ directory, and the embedded catalogue)",
     );
     process.exit(1);
   }
 
+  const [remote, installed] = await Promise.all([
+    fetchCatalogue(realFs, fetch, process.env),
+    loadInstalled(realFs, process.env),
+  ]);
+
+  // Printed before entering the TUI: a warning inside the alt-screen would
+  // break the drawing, and it's not urgent enough to block startup.
+  if (remote.warning) console.error(`warning: ${remote.warning}`);
+
+  const entries = mergeCatalogue({
+    builtin,
+    installed,
+    remote: remote.themes,
+  });
+
+  const deps = {
+    install: (theme: (typeof builtin)[number]) =>
+      installTheme(realFs, process.env, theme),
+    refresh: () => fetchCatalogue(realFs, fetch, process.env, { force: true }),
+  };
+
   if (argv.length === 0) {
-    // Task 8 wires this to the real catalogue (builtin + installed + remote);
-    // for now every theme is presented as builtin so the TUI keeps working.
-    const entries = themes.map((theme) => ({
-      theme,
-      origin: "builtin" as const,
-    }));
     const applied = await runTui(entries, backend);
-    if (applied) console.log(`applied ${applied.name}`);
+    if (applied) {
+      const entry = entries.find((e) => e.theme.name === applied.name);
+      if (entry?.origin === "remote") {
+        await installTheme(realFs, process.env, applied);
+      }
+      console.log(`applied ${applied.name}`);
+    }
     process.exit(0);
   }
 
-  const code = await runCli(argv, backend, themes, (s) => console.log(s));
+  const code = await runCli(
+    argv,
+    backend,
+    entries,
+    (s) => console.log(s),
+    deps,
+  );
   process.exit(code);
 }
