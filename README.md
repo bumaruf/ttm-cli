@@ -1,6 +1,10 @@
 <h1 align="center">ttm</h1>
 
 <p align="center">
+  <b>t</b>erminal <b>t</b>heme <b>m</b>anager
+</p>
+
+<p align="center">
   <i>Pick a terminal theme by seeing it, not by reading its name.</i>
 </p>
 
@@ -30,7 +34,7 @@ change on screen. In a real GNOME Terminal the whole window repaints.
 
 ## 💻 Project
 
-`ttm` is a TUI for picking a GNOME Terminal color theme, built on one idea: **the window running it is the preview.**
+`ttm` — short for **terminal theme manager** — is a TUI for picking a GNOME Terminal color theme, built on one idea: **the window running it is the preview.**
 
 As you move through the list, `ttm` repaints the terminal you're sitting in — live — with the real colors of the highlighted theme. Nothing is written to disk while you browse. Press `Esc` and the window snaps back to exactly how it looked before, as if nothing happened. Press `Enter` and the theme is applied for real, with the window already showing it — no reopening anything.
 
