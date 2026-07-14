@@ -1,6 +1,6 @@
 {
   "name": "@bumaruf/ttm-cli",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Terminal theme manager — pick a theme by seeing it live in the window you're sitting in",
   "type": "module",
   "bin": {
