@@ -1,5 +1,6 @@
 import { writeSync } from "node:fs";
 import type { Backend } from "../backends/backend";
+import type { Entry } from "../catalogue/merge";
 import { applyTheme, resetColors } from "../core/osc";
 import type { Theme } from "../core/theme";
 import { render } from "./render";
@@ -181,7 +182,7 @@ export function teardownSequence(resetColorsFlag: boolean): string {
 }
 
 export async function runTui(
-  themes: Theme[],
+  entries: Entry[],
   backend: Backend,
   io: TuiIo = defaultIo,
 ): Promise<Theme | null> {
@@ -218,12 +219,12 @@ export async function runTui(
     io.start();
     io.write(ALT_SCREEN_ON + CURSOR_HIDE);
 
-    let state: State = initialState(themes);
+    let state: State = initialState(entries);
     let painted: Theme | null = null;
 
     const draw = () => {
       const { columns, rows } = io.size();
-      const current = focused(state);
+      const current = focused(state)?.theme ?? null;
       if (current && current !== painted) {
         io.write(applyTheme(current));
         painted = current;

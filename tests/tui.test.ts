@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Backend } from "../src/backends/backend";
+import { mergeCatalogue } from "../src/catalogue/merge";
 import { applyTheme, resetColors } from "../src/core/osc";
 import type { Theme } from "../src/core/theme";
 import {
@@ -113,6 +114,12 @@ const THEMES: Theme[] = [
   },
 ];
 
+const ENTRIES = mergeCatalogue({
+  builtin: THEMES,
+  installed: [],
+  remote: [],
+});
+
 const RESET_SEQUENCE = teardownSequence(true);
 const KEEP_SEQUENCE = teardownSequence(false);
 
@@ -173,7 +180,7 @@ test("Esc cancels: emits the reset sequence, turns raw mode off, resolves null, 
   const { io, syncWritten, rawModeCalls } = fakeIo(["\x1b"]);
   const backend = fakeBackend();
 
-  const result = await runTui(THEMES, backend, io);
+  const result = await runTui(ENTRIES, backend, io);
 
   expect(result).toBeNull();
   expect(backend.applyCalls).toEqual([]);
@@ -187,7 +194,7 @@ test("Enter applies: calls backend.apply with the focused theme, no reset sequen
   const { io, syncWritten, rawModeCalls } = fakeIo(["\r"]);
   const backend = fakeBackend();
 
-  const result = await runTui(THEMES, backend, io);
+  const result = await runTui(ENTRIES, backend, io);
 
   expect(result).toEqual(THEMES[0]!);
   expect(backend.applyCalls).toEqual([THEMES[0]!]);
@@ -202,7 +209,7 @@ test("navigating down repaints: emits the OSC sequence for the newly focused the
   const { io, written } = fakeIo(["\x1b[B", "\x1b"]);
   const backend = fakeBackend();
 
-  await runTui(THEMES, backend, io);
+  await runTui(ENTRIES, backend, io);
 
   const emitted = written.join("");
   expect(emitted).toContain(applyTheme(THEMES[1]!));
@@ -218,7 +225,7 @@ test("registering a signal that the platform does not support does not throw", a
 
   // Teardown lives in the `finally`; an unavailable signal must not take
   // down the TUI.
-  await expect(runTui(THEMES, backend, io)).resolves.toBeNull();
+  await expect(runTui(ENTRIES, backend, io)).resolves.toBeNull();
   expect(rawModeCalls.at(-1)).toBe(false);
   expect(syncWritten.join("")).toContain(resetColors({}));
 });
@@ -227,7 +234,7 @@ test("teardown is idempotent: the reset sequence is emitted exactly once even th
   const { io, syncWritten } = fakeIo(["\x1b"]);
   const backend = fakeBackend();
 
-  await runTui(THEMES, backend, io);
+  await runTui(ENTRIES, backend, io);
 
   expect(syncWritten.length).toBe(1);
 });
@@ -238,7 +245,7 @@ test("backend.apply throwing still restores the terminal and the error propagate
     throw new Error("dconf: boom");
   });
 
-  await expect(runTui(THEMES, backend, io)).rejects.toThrow("dconf: boom");
+  await expect(runTui(ENTRIES, backend, io)).rejects.toThrow("dconf: boom");
 
   expect(rawModeCalls.at(-1)).toBe(false);
   expect(syncWritten.length).toBe(1);
@@ -249,7 +256,7 @@ test("stdin EOF with no Esc/Enter still tears down and restores the terminal", a
   const { io, syncWritten, rawModeCalls } = fakeIo([]);
   const backend = fakeBackend();
 
-  const result = await runTui(THEMES, backend, io);
+  const result = await runTui(ENTRIES, backend, io);
 
   expect(result).toBeNull();
   expect(backend.applyCalls).toEqual([]);

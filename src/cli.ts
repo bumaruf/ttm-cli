@@ -179,7 +179,13 @@ if (import.meta.main) {
   }
 
   if (argv.length === 0) {
-    const applied = await runTui(themes, backend);
+    // Task 8 wires this to the real catalogue (builtin + installed + remote);
+    // for now every theme is presented as builtin so the TUI keeps working.
+    const entries = themes.map((theme) => ({
+      theme,
+      origin: "builtin" as const,
+    }));
+    const applied = await runTui(entries, backend);
     if (applied) console.log(`applied ${applied.name}`);
     process.exit(0);
   }
