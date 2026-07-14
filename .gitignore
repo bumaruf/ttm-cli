@@ -10,3 +10,4 @@ dist/
 
 # Bun-only project — npm lockfile must not come back
 package-lock.json
+public/
