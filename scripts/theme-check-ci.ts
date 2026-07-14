@@ -43,12 +43,28 @@ if (changed.length === 0) {
 
 // The catalogue as it exists on the base branch — a theme being added must not
 // clash with it. Files changed in this PR are excluded so a modified theme does
-// not collide with its own previous self.
+// not collide with its own previous self. Core and community are unioned: a
+// unique name must hold across both directories combined.
 const changedPaths = new Set(changed.map((c) => c.path));
-const catalogue = (await loadThemes("themes")).filter((theme) => {
-  const file = `themes/${theme.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.toml`;
-  return !changedPaths.has(file);
-});
+
+async function catalogueOf(dir: "core" | "community") {
+  const themes = await loadThemes(`themes/${dir}`);
+  return themes.map((theme) => ({
+    theme,
+    path: pathOf(theme, dir),
+  }));
+}
+
+function pathOf(theme: { name: string }, dir: "core" | "community"): string {
+  return `themes/${dir}/${theme.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.toml`;
+}
+
+const catalogue = [
+  ...(await catalogueOf("core")),
+  ...(await catalogueOf("community")),
+]
+  .filter((entry) => !changedPaths.has(entry.path))
+  .map((entry) => entry.theme);
 
 const result = checkThemes(changed, catalogue, author);
 

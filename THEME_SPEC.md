@@ -7,12 +7,20 @@ passes locally against the rules below, it will pass in CI.
 
 ## The file
 
-One theme, one file: `themes/<slug>.toml`, where `<slug>` is the theme name,
-lowercased, with accents removed, and anything that isn't `[a-z0-9]` collapsed
-to a single hyphen (leading/trailing hyphens trimmed).
+One theme, one file: `themes/community/<slug>.toml`, where `<slug>` is the
+theme name, lowercased, with accents removed, and anything that isn't
+`[a-z0-9]` collapsed to a single hyphen (leading/trailing hyphens trimmed).
 
 Examples: `"Kanagawa Dragon"` → `kanagawa-dragon.toml`. `"Rosé Pine"` →
 `rose-pine.toml`.
+
+`themes/core/` is the small set embedded in the binary, curated by the
+maintainer and closed to PRs — it is what has to work with no network at all,
+on first use. Everything a contributor adds goes to `themes/community/`
+instead: once merged, CI republishes the catalogue index and the theme is
+immediately browsable and installable through `ttm update`, with no `ttm`
+release needed. A name must be unique across `core/` and `community/`
+combined.
 
 ## The fields
 

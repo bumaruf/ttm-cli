@@ -52,7 +52,18 @@ a CI gate (`theme-check`) enforces every rule in it, including contrast
 automatically, with the numbers in the error message — not by a reviewer
 squinting at hex.
 
-Copy `themes/nord.toml`, change the values, drop it in `themes/`:
+Themes live in two places:
+
+- `themes/core/` — the ~10 themes embedded in the binary. Curated by the
+  maintainer and closed to PRs: this is the catalogue that has to work
+  offline, on first use, with no network at all, so it stays small and
+  deliberate.
+- `themes/community/` — where your contribution goes. It ships no binary
+  release: once merged, CI republishes the catalogue index and your theme
+  shows up for everyone through `ttm update`, without anyone reinstalling
+  `ttm`.
+
+Copy `themes/core/nord.toml`, change the values, drop it in `themes/community/`:
 
 ```toml
 name = "Nord"
@@ -73,10 +84,12 @@ palette = [
 The `palette` is ANSI colors 0–15, in order. Take the values from the theme's
 official palette, not from a screenshot.
 
-Run `bun run build` before you commit: it regenerates `src/generated/builtin-themes.ts`
-(the catalogue embedded in the standalone binary). CI fails if that file is
-stale, and that is on purpose — a binary shipping a catalogue that differs from
-`themes/` would be a silent lie.
+If you touched `themes/core/`, run `bun run build` before you commit: it
+regenerates `src/generated/builtin-themes.ts` (the catalogue embedded in the
+standalone binary). CI fails if that file is stale, and that is on purpose — a
+binary shipping a catalogue that differs from `themes/core/` would be a silent
+lie. A `themes/community/` addition needs no such step — it never touches the
+binary.
 
 A theme PR carries no code, so it must not trigger an npm release: use the
 `theme:` commit type for its title, e.g. `theme: add Catppuccin Latte` (see

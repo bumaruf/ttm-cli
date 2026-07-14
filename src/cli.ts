@@ -123,7 +123,7 @@ export async function resolveThemes(
   const override = process.env.TTM_THEMES;
   if (override) return loadThemes(override);
 
-  const onDisk = join(baseDir, "..", "themes");
+  const onDisk = join(baseDir, "..", "themes", "core");
   const themes = await loadThemes(onDisk);
   if (themes.length > 0) return themes;
 

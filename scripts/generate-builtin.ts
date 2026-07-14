@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { loadThemes, type Theme } from "../src/core/theme";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const themesDir = join(root, "themes");
+const themesDir = join(root, "themes", "core");
 const outFile = join(root, "src", "generated", "builtin-themes.ts");
 
 /** Pure so it can be tested: a bug here ships a binary with a wrong catalogue. */
@@ -39,7 +39,7 @@ async function main() {
   }
 
   await Bun.write(outFile, renderBuiltinModule(themes));
-  console.log(`wrote ${themes.length} themes to ${outFile}`);
+  console.log(`wrote ${themes.length} core themes to ${outFile}`);
 }
 
 if (import.meta.main) {

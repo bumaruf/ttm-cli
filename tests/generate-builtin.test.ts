@@ -44,7 +44,7 @@ test("the embedded themes round-trip back to the same objects", () => {
 });
 
 test("a real theme file survives parse -> render -> parse unchanged", async () => {
-  const toml = await Bun.file("themes/nord.toml").text();
+  const toml = await Bun.file("themes/core/nord.toml").text();
   const parsed = parseTheme(toml, "nord.toml");
 
   expect(embedded(renderBuiltinModule([parsed]))[0]).toEqual(parsed);
