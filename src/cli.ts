@@ -2,14 +2,16 @@
 import type { Backend } from "./backend";
 import type { Theme } from "./theme";
 
-const USAGE = `ttm — pick a terminal theme and see it live
+export const USAGE = `ttm — pick a terminal theme and see it live
 
   ttm                 open the picker
   ttm list            list available themes
   ttm current         print the active theme
   ttm apply <name>    apply a theme by name
-  ttm --backend <id>  force a terminal backend (gnome)
-  ttm --help          show this help`;
+  ttm --backend <id>  force a terminal backend
+  ttm --help          show this help
+
+backends: gnome, windows-terminal, alacritty, kitty, iterm2`;
 
 export async function runCli(
   argv: string[],
@@ -142,6 +144,14 @@ if (import.meta.main) {
       console.error("usage: ttm --backend <id>");
       process.exit(1);
     }
+  }
+
+  // `--help` must work everywhere: on a machine with no supported terminal, on
+  // a CI runner, in a container. Resolving a backend first would make the help
+  // text unreachable exactly for the people who most need to read it.
+  if (argv[0] === "--help" || argv[0] === "-h") {
+    console.log(USAGE);
+    process.exit(0);
   }
 
   const backends = [
