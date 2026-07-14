@@ -1,6 +1,6 @@
 {
   "name": "@bumaruf/ttm-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Pick a terminal theme and see it live in your own window",
   "type": "module",
   "bin": {
@@ -13,6 +13,19 @@
     "LICENSE"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bumaruf/ttm-cli.git"
+  },
+  "homepage": "https://github.com/bumaruf/ttm-cli#readme",
+  "bugs": "https://github.com/bumaruf/ttm-cli/issues",
+  "keywords": [
+    "terminal",
+    "theme",
+    "tui",
+    "gnome-terminal",
+    "colorscheme"
+  ],
   "engines": {
     "bun": ">=1.3.14"
   },
