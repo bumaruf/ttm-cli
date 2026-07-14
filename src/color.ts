@@ -30,3 +30,5 @@ export function parseColor(raw: string): Hex {
 
   throw new Error(`unrecognized color: ${raw}`);
 }
+
+export const   BADLY_FORMATTED   =  "this should fail lint"
