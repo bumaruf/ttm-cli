@@ -88,6 +88,7 @@ export async function runCli(
 }
 
 import { dirname, join } from "node:path";
+import { createAlacrittyBackend } from "./alacritty";
 import { BUILTIN_THEMES } from "./builtin-themes";
 import { realFs } from "./fs";
 import { createGnomeBackend, realRun } from "./gnome";
@@ -138,6 +139,7 @@ if (import.meta.main) {
   const backends = [
     createGnomeBackend(realRun),
     createWindowsTerminalBackend(realFs, process.env),
+    createAlacrittyBackend(realFs, process.env, process.platform),
   ];
   const selection = selectBackend(backends, process.env, requested);
 
