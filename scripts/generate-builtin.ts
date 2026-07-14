@@ -14,10 +14,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const themesDir = join(root, "themes");
 const outFile = join(root, "src", "builtin-themes.ts");
 
-/**
- * Render the generated module's source. Pure, so it can be tested without
- * touching the filesystem — a bug here ships a binary with a wrong catalogue.
- */
+/** Pure so it can be tested: a bug here ships a binary with a wrong catalogue. */
 export function renderBuiltinModule(themes: Theme[]): string {
   return `// GENERATED FILE — do not edit by hand.
 //
@@ -32,8 +29,7 @@ export const BUILTIN_THEMES: Theme[] = ${JSON.stringify(themes, null, 2)};
 }
 
 async function main() {
-  // Reuses loadThemes() (readdir, .toml filter, parse, dup-check, sort) so
-  // the embedded catalogue and the on-disk catalogue can never drift apart.
+  // Reuse loadThemes() so the embedded and on-disk catalogues cannot drift.
   const themes = await loadThemes(themesDir);
 
   if (themes.length === 0) {
