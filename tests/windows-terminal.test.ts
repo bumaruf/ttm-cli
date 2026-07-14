@@ -1,8 +1,8 @@
 // tests/windows-terminal.test.ts
 import { expect, test } from "bun:test";
-import { createMemoryFs } from "../src/fs";
-import type { Theme } from "../src/theme";
-import { createWindowsTerminalBackend } from "../src/windows-terminal";
+import { createWindowsTerminalBackend } from "../src/backends/windows-terminal";
+import type { Theme } from "../src/core/theme";
+import { createMemoryFs } from "../src/platform/fs";
 
 const theme: Theme = {
   name: "Nord",

@@ -2,8 +2,8 @@
 // Uso: bun run scripts/bootstrap-themes.ts
 // Lê os perfis do GNOME Terminal e escreve themes/<slug>.toml para cada um.
 import { mkdir } from "node:fs/promises";
-import { parseColor } from "../src/color";
-import { parseList, realRun, unquote } from "../src/gnome";
+import { parseList, realRun, unquote } from "../src/backends/gnome";
+import { parseColor } from "../src/core/color";
 
 const BASE = "/org/gnome/terminal/legacy/profiles:";
 

@@ -1,6 +1,12 @@
 import { expect, test } from "bun:test";
-import { focused, initialState, type Key, matches, reduce } from "../src/state";
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
+import {
+  focused,
+  initialState,
+  type Key,
+  matches,
+  reduce,
+} from "../src/tui/state";
 
 const theme = (name: string): Theme => ({
   name,

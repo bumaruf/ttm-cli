@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { applyTheme, resetColors, wrapForMultiplexer } from "../src/osc";
-import type { Theme } from "../src/theme";
+import { applyTheme, resetColors, wrapForMultiplexer } from "../src/core/osc";
+import type { Theme } from "../src/core/theme";
 
 const theme: Theme = {
   name: "T",

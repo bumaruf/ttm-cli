@@ -1,7 +1,8 @@
 // src/windows-terminal.ts
+
+import type { Theme } from "../core/theme";
+import type { Fs } from "../platform/fs";
 import type { Backend, Env } from "./backend";
-import type { Fs } from "./fs";
-import type { Theme } from "./theme";
 
 /** Windows Terminal names the 16 ANSI colors; order matches our palette. */
 const ANSI_NAMES = [

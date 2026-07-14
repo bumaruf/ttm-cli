@@ -1,5 +1,5 @@
-import { contrastRatio } from "../src/contrast";
-import { parseTheme, type Theme } from "../src/theme";
+import { contrastRatio } from "../src/core/contrast";
+import { parseTheme, type Theme } from "../src/core/theme";
 
 const FG_MIN = 4.5; // WCAG AA, normal text
 

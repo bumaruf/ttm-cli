@@ -1,8 +1,9 @@
 // src/kitty.ts
+
+import type { Theme } from "../core/theme";
+import { addImport } from "../platform/config-file";
+import type { Fs } from "../platform/fs";
 import type { Backend, Env, Run } from "./backend";
-import { addImport } from "./config-file";
-import type { Fs } from "./fs";
-import type { Theme } from "./theme";
 
 const INCLUDE_LINE = "include ttm-theme.conf";
 

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { renderBuiltinModule } from "../scripts/generate-builtin";
-import { parseTheme, type Theme } from "../src/theme";
+import { parseTheme, type Theme } from "../src/core/theme";
 
 const theme = (name: string): Theme => ({
   name,
@@ -17,7 +17,8 @@ test("marks the file as generated so nobody edits it by hand", () => {
 
 test("exports a typed BUILTIN_THEMES array", () => {
   const source = renderBuiltinModule([theme("Nord")]);
-  expect(source).toContain('import type { Theme } from "./theme"');
+  // The generated file lives in src/generated/, so it reaches core as ../core.
+  expect(source).toContain('import type { Theme } from "../core/theme"');
   expect(source).toContain("export const BUILTIN_THEMES: Theme[] =");
 });
 

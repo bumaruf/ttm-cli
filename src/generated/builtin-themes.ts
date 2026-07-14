@@ -4,7 +4,7 @@
 // `bun run scripts/generate-builtin.ts` (or `bun run build`, which does
 // this automatically) to regenerate after changing a theme file.
 
-import type { Theme } from "./theme";
+import type { Theme } from "../core/theme";
 
 export const BUILTIN_THEMES: Theme[] = [
   {

@@ -3,7 +3,7 @@ import {
   renderDiffPreview,
   renderPreview,
 } from "../scripts/render-theme-preview";
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
 
 const theme: Theme = {
   name: "Nord",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import type { Backend } from "./backend";
-import type { Theme } from "./theme";
+import type { Backend } from "./backends/backend";
+import type { Theme } from "./core/theme";
 
 export const USAGE = `ttm — pick a terminal theme and see it live
 
@@ -96,16 +96,16 @@ export async function runCli(
 }
 
 import { dirname, join } from "node:path";
-import { createAlacrittyBackend } from "./alacritty";
-import { BUILTIN_THEMES } from "./builtin-themes";
-import { realFs } from "./fs";
-import { createGnomeBackend, realRun } from "./gnome";
-import { createIterm2Backend } from "./iterm2";
-import { createKittyBackend } from "./kitty";
-import { selectBackend } from "./registry";
-import { loadThemes } from "./theme";
-import { runTui } from "./tui";
-import { createWindowsTerminalBackend } from "./windows-terminal";
+import { createAlacrittyBackend } from "./backends/alacritty";
+import { createGnomeBackend, realRun } from "./backends/gnome";
+import { createIterm2Backend } from "./backends/iterm2";
+import { createKittyBackend } from "./backends/kitty";
+import { selectBackend } from "./backends/registry";
+import { createWindowsTerminalBackend } from "./backends/windows-terminal";
+import { loadThemes } from "./core/theme";
+import { BUILTIN_THEMES } from "./generated/builtin-themes";
+import { realFs } from "./platform/fs";
+import { runTui } from "./tui/loop";
 
 /**
  * Resolve the theme catalogue, in order:

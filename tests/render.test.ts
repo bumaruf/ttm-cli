@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { render } from "../src/render";
-import { initialState, reduce, type State } from "../src/state";
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
+import { render } from "../src/tui/render";
+import { initialState, reduce, type State } from "../src/tui/state";
 
 const theme = (name: string): Theme => ({
   name,

@@ -73,7 +73,7 @@ palette = [
 The `palette` is ANSI colors 0–15, in order. Take the values from the theme's
 official palette, not from a screenshot.
 
-Run `bun run build` before you commit: it regenerates `src/builtin-themes.ts`
+Run `bun run build` before you commit: it regenerates `src/generated/builtin-themes.ts`
 (the catalogue embedded in the standalone binary). CI fails if that file is
 stale, and that is on purpose — a binary shipping a catalogue that differs from
 `themes/` would be a silent lie.
@@ -85,7 +85,7 @@ A theme PR carries no code, so it must not trigger an npm release: use the
 ## Adding a backend
 
 New terminal emulators are supported by implementing the `Backend` interface in
-`src/backend.ts`:
+`src/backends/backend.ts`:
 
 ```ts
 export interface Backend {
@@ -137,35 +137,50 @@ Everything that decides behavior is a pure function, and the one module that
 touches the terminal is deliberately small. That is what makes this reviewable
 by someone who didn't write it.
 
+```
+src/
+  core/         the product itself. Pure — no I/O.
+  tui/          the screen
+  backends/     the emulators. Swappable. This is the extension seam.
+  platform/     plumbing the backends use
+  generated/    tool output — do not edit
+  cli.ts        entry point
+```
+
 | File | Responsibility |
 |---|---|
-| `src/color.ts` | Normalizes colors (dconf mixes `#282a36` and `rgb(27,27,27)`) |
-| `src/theme.ts` | Loads and validates `themes/*.toml` |
-| `src/osc.ts` | Turns a theme into escape sequences. Pure. |
-| `src/state.ts` | Navigation, fuzzy filter, and the exit contract. Pure. |
-| `src/render.ts` | The screen, as a string. Pure. |
-| `src/backend.ts` | The `Backend` interface — the extension seam |
-| `src/registry.ts` | Picks a backend by detection or `--backend`; never guesses |
-| `src/fs.ts` | The `Fs` seam — injectable filesystem for file-based backends |
-| `src/config-file.ts` | Safe, idempotent import-line handling with backups |
-| `src/gnome.ts` | The only module that knows what dconf is |
-| `src/windows-terminal.ts` | Windows Terminal: fragment file + surgical JSONC edit |
-| `src/alacritty.ts` | Alacritty: owns `ttm-theme.toml`, adds one import line |
-| `src/kitty.ts` | kitty: owns `ttm-theme.conf`, repaints via remote control |
-| `src/iterm2.ts` | iTerm2: a dynamic profile, no preferences ever touched |
-| `src/tui.ts` | The only module that does terminal I/O |
-| `src/cli.ts` | Subcommands and entry point |
+| `core/color.ts` | Normalizes colors (dconf mixes `#282a36` and `rgb(27,27,27)`) |
+| `core/theme.ts` | Loads and validates `themes/*.toml` |
+| `core/contrast.ts` | WCAG contrast — the theme gate uses it |
+| `core/osc.ts` | Turns a theme into escape sequences. Pure. **This is the trick.** |
+| `core/env.ts` | The `Env` type. Lives here because `osc` reads `$TMUX`. |
+| `tui/state.ts` | Navigation, fuzzy filter, and the exit contract. Pure. |
+| `tui/render.ts` | The screen, as a string. Pure. |
+| `tui/loop.ts` | The only module that does terminal I/O |
+| `backends/backend.ts` | The `Backend` interface — the extension seam |
+| `backends/registry.ts` | Picks a backend by detection or `--backend`; never guesses |
+| `backends/gnome.ts` | The only module that knows what dconf is |
+| `backends/windows-terminal.ts` | Fragment file + surgical JSONC edit (keeps your comments) |
+| `backends/alacritty.ts` | Owns `ttm-theme.toml`, adds one import line |
+| `backends/kitty.ts` | Owns `ttm-theme.conf`, repaints via remote control |
+| `backends/iterm2.ts` | A dynamic profile — preferences never touched |
+| `platform/fs.ts` | The `Fs` seam — injectable filesystem, so tests never touch disk |
+| `platform/config-file.ts` | Safe, idempotent import-line handling with backups |
+| `cli.ts` | Subcommands and entry point |
+
+Adding an emulator? Everything you need is in `backends/` — copy the neighbour
+closest to your config format and implement `Backend`. Nothing else moves.
 
 ### The one rule that matters
 
 `ttm` mutates the user's real terminal — colors, raw mode, alt-screen. **There
 must be no path that leaves it in a state the user didn't choose.** Cancelling
 restores the original colors; applying keeps the chosen theme. That decision is
-made in `src/state.ts` (as data) and executed in `src/tui.ts` through a single
+made in `tui/state.ts` (as data) and executed in `tui/loop.ts` through a single
 idempotent teardown that runs from a `finally` and from the signal handlers,
 using synchronous writes so a dying process can't truncate the restore sequence.
 
-If you touch `src/tui.ts`, that invariant is what your reviewer will be looking
+If you touch `tui/loop.ts`, that invariant is what your reviewer will be looking
 at first.
 
 ## Style

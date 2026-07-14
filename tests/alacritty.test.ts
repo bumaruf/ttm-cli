@@ -1,8 +1,8 @@
 // tests/alacritty.test.ts
 import { expect, test } from "bun:test";
-import { createAlacrittyBackend } from "../src/alacritty";
-import { createMemoryFs } from "../src/fs";
-import type { Theme } from "../src/theme";
+import { createAlacrittyBackend } from "../src/backends/alacritty";
+import type { Theme } from "../src/core/theme";
+import { createMemoryFs } from "../src/platform/fs";
 
 const theme: Theme = {
   name: "Nord",

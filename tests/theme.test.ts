@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { chmod, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadThemes, parseTheme } from "../src/theme";
+import { loadThemes, parseTheme } from "../src/core/theme";
 
 const PALETTE = Array.from(
   { length: 16 },

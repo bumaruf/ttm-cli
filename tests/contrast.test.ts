@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { contrastRatio, relativeLuminance } from "../src/contrast";
+import { contrastRatio, relativeLuminance } from "../src/core/contrast";
 
 test("luminance of black and white are the known extremes", () => {
   expect(relativeLuminance("#000000")).toBeCloseTo(0, 4);

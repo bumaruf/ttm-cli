@@ -1,7 +1,8 @@
 // src/iterm2.ts
+
+import type { Theme } from "../core/theme";
+import type { Fs } from "../platform/fs";
 import type { Backend, Env } from "./backend";
-import type { Fs } from "./fs";
-import type { Theme } from "./theme";
 
 const GUID = "ttm-theme";
 

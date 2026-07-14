@@ -39,10 +39,10 @@ jobs:
 
       - run: bun run build
 
-      - name: verify src/builtin-themes.ts is up to date
+      - name: verify src/generated/builtin-themes.ts is up to date
         run: |
           bun run generate-builtin
-          git diff --exit-code src/builtin-themes.ts
+          git diff --exit-code src/generated/builtin-themes.ts
 
       - name: smoke-test compiled binary
         run: |
