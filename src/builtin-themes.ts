@@ -113,7 +113,7 @@ export const BUILTIN_THEMES: Theme[] = [
     "author": "@bumaruf",
     "contributor": "@bumaruf",
     "source": "https://github.com/morhetz/gruvbox",
-    "license": "MIT"
+    "license": "unlicensed"
   },
   {
     "name": "Kanagawa",

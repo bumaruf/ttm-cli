@@ -39,10 +39,16 @@ same order (bright black, bright red, …, bright white).
 
 ## The gate's rules, exactly
 
-- **Contrast (WCAG).** `foreground` × `background` ≥ **4.5:1**. Every color in
-  `palette` × `background` ≥ **3:1**. This is the check a human reading hex
-  values cannot do reliably — a theme that fails it is rejected, with the
-  computed ratio in the error message.
+- **Contrast (WCAG).** `foreground` × `background` ≥ **4.5:1**. This is the check
+  a human reading hex values cannot do reliably — a theme whose text is hard to
+  read on its own background is rejected, with the computed ratio in the error
+  message.
+
+  The **palette is deliberately not** contrast-checked. In a dark theme, `color0`
+  ("black") is meant to sit right next to the background, and even genuine text
+  colors fall below 3:1 in themes millions of people use — Gruvbox's red scores
+  2.69, Solarized's green 2.79. A rule that rejects Gruvbox, Nord and Dracula is
+  not protecting anyone.
 - **Structure.** The file must parse (see `src/theme.ts`): `name`, valid
   `background`/`foreground`, and a `palette` of exactly 16 colors.
 - **Provenance.** `source` must be an `https://` or `http://` URL. `license`

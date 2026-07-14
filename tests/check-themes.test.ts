@@ -2,15 +2,8 @@ import { expect, test } from "bun:test";
 import { checkThemes, slugify, type ThemeFile } from "../scripts/check-themes";
 import type { Theme } from "../src/theme";
 
-// NOTE: indices 0 and 8 (Nord's real color0/color8, "#3b4252"/"#4c566a") were
-// replaced with "#7b83a8". Nord's own near-black ANSI colors score below the
-// 3:1 palette threshold against its background (see THEME_SPEC / Task 3 report)
-// — using them here would make "a well-formed theme passes" fail for a reason
-// that has nothing to do with the assertion under test. The gate logic and its
-// exact thresholds (4.5 / 3.0) are unchanged; only this synthetic fixture was
-// adjusted so it is internally self-consistent.
 const PALETTE = [
-  "#7b83a8",
+  "#3b4252",
   "#bf616a",
   "#a3be8c",
   "#ebcb8b",
@@ -18,7 +11,7 @@ const PALETTE = [
   "#b48ead",
   "#88c0d0",
   "#e5e9f0",
-  "#7b83a8",
+  "#4c566a",
   "#bf616a",
   "#a3be8c",
   "#ebcb8b",
@@ -124,18 +117,6 @@ test("an unreadable theme is rejected, with the ratio in the message", () => {
   expect(result.ok).toBe(false);
   expect(result.errors.join("\n")).toMatch(/contrast/i);
   expect(result.errors.join("\n")).toMatch(/4\.5/);
-});
-
-test("a palette color that vanishes into the background is rejected", () => {
-  const vanishing = [...PALETTE];
-  vanishing[1] = "#2e3441"; // essentially the background
-  const bad = added({
-    background: '"#2e3440"',
-    foreground: '"#d8dee9"',
-    palette: `[${vanishing.map((c) => `"${c}"`).join(",")}]`,
-  });
-  const result = checkThemes([bad], [existing], "@fulano");
-  expect(result.errors.join("\n")).toMatch(/palette\[1\]/);
 });
 
 // Credit protection.

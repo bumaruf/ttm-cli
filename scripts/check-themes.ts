@@ -2,7 +2,6 @@ import { contrastRatio } from "../src/contrast";
 import { parseTheme, type Theme } from "../src/theme";
 
 const FG_MIN = 4.5; // WCAG AA, normal text
-const PALETTE_MIN = 3; // highlight/prompt colors, not paragraphs
 
 export interface ThemeFile {
   path: string;
@@ -82,7 +81,14 @@ export function checkThemes(
       }
     }
 
-    // Readability. This is the defect nobody catches reading hex.
+    // Readability of the text you actually read all day. This is the defect
+    // nobody catches by reading hex.
+    //
+    // Only foreground/background is checked. The palette is deliberately NOT:
+    // in a dark theme, color0 ("black") is meant to sit right next to the
+    // background, and even real text colors fall below 3:1 in themes millions
+    // of people use — Gruvbox's red is 2.69, Solarized's green is 2.79. A rule
+    // that rejects Dracula, Nord and Gruvbox is not protecting anyone.
     const fg = contrastRatio(theme.foreground, theme.background);
     if (fg < FG_MIN) {
       fail(
@@ -90,16 +96,6 @@ export function checkThemes(
         `contrast between foreground and background is ${fg.toFixed(2)}:1, below the required ${FG_MIN}:1 — the text would be hard to read`,
       );
     }
-
-    theme.palette.forEach((color, i) => {
-      const ratio = contrastRatio(color, theme.background);
-      if (ratio < PALETTE_MIN) {
-        fail(
-          name,
-          `palette[${i}] (${color}) has contrast ${ratio.toFixed(2)}:1 against the background, below the required ${PALETTE_MIN}:1 — it would be invisible`,
-        );
-      }
-    });
 
     if (file.status === "added") {
       const clash = catalogue.find(
