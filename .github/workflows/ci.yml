@@ -84,8 +84,10 @@ jobs:
       - name: the CLI must run from source
         shell: pwsh
         run: |
-          $output = bun run src/cli.ts --help
-          $output
+          $output = (bun run src/cli.ts --help) -join "`n"
+          Write-Output $output
+          # NB: `$array -notmatch` filters instead of returning a boolean —
+          # join into a single string first, or this is always truthy.
           if ($output -notmatch "ttm apply") { exit 1 }
 
       # The real question for Windows: does the npm-installed bin work at
@@ -98,6 +100,6 @@ jobs:
           npm pack
           $tarball = Get-ChildItem -Filter "*.tgz" | Select-Object -First 1
           npm install -g $tarball.Name
-          $output = ttm --help
-          $output
+          $output = (ttm --help) -join "`n"
+          Write-Output $output
           if ($output -notmatch "ttm apply") { exit 1 }
