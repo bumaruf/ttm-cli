@@ -1,6 +1,6 @@
 // tests/fs.test.ts
 import { expect, test } from "bun:test";
-import { createMemoryFs } from "../src/fs";
+import { createMemoryFs } from "../src/platform/fs";
 
 test("reads a seeded file", async () => {
   const fs = createMemoryFs({ "/a/b.txt": "hello" });

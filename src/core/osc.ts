@@ -1,5 +1,5 @@
-import type { Env } from "./backend";
 import { isHex } from "./color";
+import type { Env } from "./env";
 import type { Theme } from "./theme";
 
 const BEL = "\x07";

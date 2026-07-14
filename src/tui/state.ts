@@ -1,4 +1,4 @@
-import type { Theme } from "./theme";
+import type { Theme } from "../core/theme";
 
 export type Key =
   | { name: "up" | "down" | "enter" | "escape" | "backspace" }

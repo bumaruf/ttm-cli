@@ -1,4 +1,4 @@
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
 
 // GitHub strips `bgcolor` and `style` from comment HTML, so colored table cells
 // render blank. What it DOES render is a color swatch beside a hex code written

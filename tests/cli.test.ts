@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import type { Backend } from "../src/backend";
+import type { Backend } from "../src/backends/backend";
 import { runCli } from "../src/cli";
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
 
 const theme = (name: string): Theme => ({
   name,

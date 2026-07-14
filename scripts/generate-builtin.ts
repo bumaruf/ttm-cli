@@ -1,6 +1,6 @@
 // scripts/generate-builtin.ts
 //
-// Generates src/builtin-themes.ts from themes/*.toml so the compiled
+// Generates src/generated/builtin-themes.ts from themes/*.toml so the compiled
 // standalone binary (`bun build --compile`) always has a themes catalogue
 // embedded in it, without contributors ever hand-editing the generated file.
 //
@@ -8,11 +8,11 @@
 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadThemes, type Theme } from "../src/theme";
+import { loadThemes, type Theme } from "../src/core/theme";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const themesDir = join(root, "themes");
-const outFile = join(root, "src", "builtin-themes.ts");
+const outFile = join(root, "src", "generated", "builtin-themes.ts");
 
 /** Pure so it can be tested: a bug here ships a binary with a wrong catalogue. */
 export function renderBuiltinModule(themes: Theme[]): string {
@@ -22,7 +22,7 @@ export function renderBuiltinModule(themes: Theme[]): string {
 // \`bun run scripts/generate-builtin.ts\` (or \`bun run build\`, which does
 // this automatically) to regenerate after changing a theme file.
 
-import type { Theme } from "./theme";
+import type { Theme } from "../core/theme";
 
 export const BUILTIN_THEMES: Theme[] = ${JSON.stringify(themes, null, 2)};
 `;

@@ -1,8 +1,8 @@
 // tests/kitty.test.ts
 import { expect, test } from "bun:test";
-import { createMemoryFs } from "../src/fs";
-import { createKittyBackend } from "../src/kitty";
-import type { Theme } from "../src/theme";
+import { createKittyBackend } from "../src/backends/kitty";
+import type { Theme } from "../src/core/theme";
+import { createMemoryFs } from "../src/platform/fs";
 
 const theme: Theme = {
   name: "Nord",

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { checkThemes, slugify, type ThemeFile } from "../scripts/check-themes";
-import type { Theme } from "../src/theme";
+import type { Theme } from "../src/core/theme";
 
 const PALETTE = [
   "#3b4252",

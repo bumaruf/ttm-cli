@@ -1,8 +1,13 @@
 import { expect, test } from "bun:test";
-import type { Backend } from "../src/backend";
-import { applyTheme, resetColors } from "../src/osc";
-import type { Theme } from "../src/theme";
-import { parseKeys, runTui, type TuiIo, teardownSequence } from "../src/tui";
+import type { Backend } from "../src/backends/backend";
+import { applyTheme, resetColors } from "../src/core/osc";
+import type { Theme } from "../src/core/theme";
+import {
+  parseKeys,
+  runTui,
+  type TuiIo,
+  teardownSequence,
+} from "../src/tui/loop";
 
 const CURSOR_SHOW = "\x1b[?25h";
 const ALT_SCREEN_OFF = "\x1b[?1049l";

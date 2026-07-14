@@ -125,7 +125,7 @@ Press `Enter` and `ttm` writes the theme into GNOME Terminal's dconf settings an
 
 **`ttm` never rewrites your config wholesale.** It owns its own file (a fragment, a dynamic profile, or a `ttm-theme.*` file next to your config) and, at most, adds a single import/include line to your existing config — once, with a backup taken first. Your comments and formatting are never touched beyond that one line.
 
-Another emulator means implementing the `Backend` interface in [`src/backend.ts`](src/backend.ts):
+Another emulator means implementing the `Backend` interface in [`src/backends/backend.ts`](src/backends/backend.ts):
 
 ```ts
 export interface Backend {

@@ -1,8 +1,8 @@
 // tests/iterm2.test.ts
 import { expect, test } from "bun:test";
-import { createMemoryFs } from "../src/fs";
-import { createIterm2Backend } from "../src/iterm2";
-import type { Theme } from "../src/theme";
+import { createIterm2Backend } from "../src/backends/iterm2";
+import type { Theme } from "../src/core/theme";
+import { createMemoryFs } from "../src/platform/fs";
 
 const theme: Theme = {
   name: "Nord",

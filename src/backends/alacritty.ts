@@ -1,8 +1,9 @@
 // src/alacritty.ts
+
+import type { Theme } from "../core/theme";
+import { addImport } from "../platform/config-file";
+import type { Fs } from "../platform/fs";
 import type { Backend, Env } from "./backend";
-import { addImport } from "./config-file";
-import type { Fs } from "./fs";
-import type { Theme } from "./theme";
 
 const IMPORT_LINE = 'general.import = ["ttm-theme.toml"]';
 

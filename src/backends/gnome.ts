@@ -1,6 +1,7 @@
 // src/gnome.ts
+
+import type { Theme } from "../core/theme";
 import type { Backend, Run } from "./backend";
-import type { Theme } from "./theme";
 
 const SCHEMA = "org.gnome.Terminal.ProfilesList";
 const BASE = "/org/gnome/terminal/legacy/profiles:";

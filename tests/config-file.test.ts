@@ -1,7 +1,7 @@
 // tests/config-file.test.ts
 import { expect, test } from "bun:test";
-import { addImport, hasImport } from "../src/config-file";
-import { createMemoryFs } from "../src/fs";
+import { addImport, hasImport } from "../src/platform/config-file";
+import { createMemoryFs } from "../src/platform/fs";
 
 const CONFIG = "/home/me/.config/alacritty/alacritty.toml";
 const LINE = 'general.import = ["ttm-theme.toml"]';

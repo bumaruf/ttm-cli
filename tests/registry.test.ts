@@ -1,7 +1,7 @@
 // tests/registry.test.ts
 import { expect, test } from "bun:test";
-import type { Backend, Env } from "../src/backend";
-import { selectBackend } from "../src/registry";
+import type { Backend, Env } from "../src/backends/backend";
+import { selectBackend } from "../src/backends/registry";
 
 const stub = (id: string, detectVar: string): Backend => ({
   id,

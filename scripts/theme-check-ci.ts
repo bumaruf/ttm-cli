@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { loadThemes, parseTheme } from "../src/theme";
+import { loadThemes, parseTheme } from "../src/core/theme";
 import { checkThemes, type ThemeFile } from "./check-themes";
 import { renderDiffPreview, renderPreview } from "./render-theme-preview";
 

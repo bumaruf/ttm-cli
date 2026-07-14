@@ -1,7 +1,7 @@
 // tests/gnome.test.ts
 import { expect, test } from "bun:test";
-import { createGnomeBackend } from "../src/gnome";
-import type { Theme } from "../src/theme";
+import { createGnomeBackend } from "../src/backends/gnome";
+import type { Theme } from "../src/core/theme";
 
 const theme: Theme = {
   name: "Nord",

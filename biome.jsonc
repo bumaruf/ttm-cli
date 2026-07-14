@@ -6,14 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    // builtin-themes.ts is generated — don't lint a tool's output.
+    // src/generated/ holds tool output — don't lint it.
     "includes": [
       "src/**",
       "tests/**",
       "scripts/**",
       "*.json",
       "*.jsonc",
-      "!**/src/builtin-themes.ts"
+      "!**/src/generated"
     ]
   },
   "formatter": {
@@ -50,8 +50,8 @@
       // Escape sequences are the point of this project — the control chars are
       // deliberate.
       "includes": [
-        "src/osc.ts",
-        "src/tui.ts",
+        "src/core/osc.ts",
+        "src/tui/loop.ts",
         "tests/osc.test.ts",
         "tests/tui.test.ts",
         "tests/render.test.ts"
