@@ -71,6 +71,12 @@ export async function runCli(
         return 1;
       }
       out(`applied ${theme.name} (new windows will use it)`);
+      if (backend.id === "iterm2") {
+        out("");
+        out("first time only: in iTerm2, open Settings → Profiles and set");
+        out(`"ttm — ${theme.name}" as your default profile. After that, ttm`);
+        out("updates it in place and you never need to touch this again.");
+      }
       return 0;
     }
 
@@ -92,6 +98,7 @@ import { createAlacrittyBackend } from "./alacritty";
 import { BUILTIN_THEMES } from "./builtin-themes";
 import { realFs } from "./fs";
 import { createGnomeBackend, realRun } from "./gnome";
+import { createIterm2Backend } from "./iterm2";
 import { createKittyBackend } from "./kitty";
 import { selectBackend } from "./registry";
 import { loadThemes } from "./theme";
@@ -142,6 +149,7 @@ if (import.meta.main) {
     createWindowsTerminalBackend(realFs, process.env),
     createAlacrittyBackend(realFs, process.env, process.platform),
     createKittyBackend(realFs, realRun, process.env),
+    createIterm2Backend(realFs, process.env),
   ];
   const selection = selectBackend(backends, process.env, requested);
 
