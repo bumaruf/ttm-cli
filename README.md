@@ -70,6 +70,13 @@ The command is `ttm` however you install it. Run it with no arguments to open th
 | `Enter` | Apply the highlighted theme and exit |
 | `Esc` / `Ctrl-C` | Cancel, restore the original colors, and exit |
 
+The picker also shows the **community catalogue** — themes nobody had to
+release a new `ttm` for. A theme marked with `↓` isn't on your machine yet;
+moving to it still repaints the window instantly (the whole catalogue,
+colors included, is fetched once and kept in memory — no per-theme network
+call, ever). Browsing installs nothing. Only pressing `Enter` writes a file,
+and only for the theme you picked.
+
 Subcommands, for scripting or checking state without the picker:
 
 ```
@@ -77,9 +84,25 @@ ttm                 open the picker
 ttm list            list available themes
 ttm current         print the active theme
 ttm apply <name>    apply a theme by name
+ttm update          refresh the community catalogue
 ttm --backend <id>  force a terminal backend
 ttm --help          show this help
 ```
+
+### The community catalogue
+
+The full catalogue (every theme's name, colors and metadata — a few KB total)
+lives in one file, published from this repo and cached locally for 24h with
+an ETag. That's deliberate: fetching one file up front means the picker never
+waits on the network while you're browsing.
+
+- **Browsing installs nothing.** Only `Enter` writes a `.toml` file, and only
+  for the theme you chose — never the hundred you scrolled past.
+- **Offline is normal, not an error.** No network? `ttm` uses the last good
+  cache. No cache either (first run, no connectivity)? It falls back to the
+  themes built into the binary and prints a warning — it never blocks or
+  crashes because the catalogue is unreachable.
+- `ttm update` forces a refetch and reports how many themes are available.
 
 ### Choosing a backend
 
@@ -89,7 +112,11 @@ ttm --help          show this help
 
 ## ⚙️ Configuration
 
-A theme is a single TOML file in `themes/`. Drop one in and it shows up in the picker — no code changes needed. Here's `themes/nord.toml` in full, as a template:
+A theme is a single TOML file. The binary embeds `themes/core/` (works with
+no network, on first use); everything else comes from the community
+catalogue and is installed to `~/.config/ttm/themes/` (or
+`$XDG_CONFIG_HOME/ttm/themes/`) the moment you apply it. Here's
+`themes/core/nord.toml` in full, as a template:
 
 ```toml
 name = "Nord"
@@ -142,7 +169,7 @@ Nothing else in the codebase needs to change — the picker, the live preview, a
 
 ## 🔥 Contribute
 
-**Adding a theme needs no code at all**: copy `themes/nord.toml`, change the colors, open a PR. That's the whole contribution.
+**Adding a theme needs no code at all**: copy `themes/core/nord.toml` into `themes/community/`, change the colors, open a PR. That's the whole contribution — once merged, CI republishes the catalogue and it shows up in everyone's picker with no `ttm` release.
 
 ```bash
 bun install     # also installs the git hooks
