@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import { loadThemes, parseTheme } from "../src/core/theme";
-import { checkThemes, type ThemeFile } from "./check-themes";
+import { checkThemes, slugify, type ThemeFile } from "./check-themes";
 import { renderDiffPreview, renderPreview } from "./render-theme-preview";
 
 const base = process.env.BASE_SHA;
@@ -73,7 +73,12 @@ async function catalogueOf(dir: "core" | "community") {
 }
 
 function pathOf(theme: { name: string }, dir: "core" | "community"): string {
-  return `themes/${dir}/${theme.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.toml`;
+  // Must use the SAME slugify as the filename rule (check-themes.ts), which
+  // strips accents via NFD. The old inline version turned "é" into a hyphen
+  // ("Rosé" → "ros-"), so an accented theme's reconstructed path never matched
+  // its real file ("rose-..."); the exclusion failed and the theme collided
+  // with itself as "already exists". Only accented names hit it.
+  return `themes/${dir}/${slugify(theme.name)}.toml`;
 }
 
 const catalogue = [
