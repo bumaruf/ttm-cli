@@ -123,14 +123,47 @@ test("list marks what is not installed yet", async () => {
   expect(text()).toMatch(/Zenburn.*↓/);
 });
 
-test("update reports how many themes the catalogue has", async () => {
+test("update on a fresh download says it updated", async () => {
   const { backend } = fakeBackend();
   const { out, text } = capture();
   const code = await runCli(["update"], backend, ENTRIES, out, {
-    refresh: async () => ({ themes: [], source: "network" as const }),
+    refresh: async () => ({
+      themes: [theme("Dracula"), theme("Nord")],
+      source: "network" as const,
+    }),
   });
   expect(code).toBe(0);
-  expect(text()).toMatch(/catalogue/i);
+  expect(text()).toMatch(/updated: 2 themes/);
+});
+
+// The reported defect: an explicit update that gets a 304 used to say "cache",
+// which reads as "nothing happened". It revalidated — say so.
+test("update that revalidates says it is already up to date", async () => {
+  const { backend } = fakeBackend();
+  const { out, text } = capture();
+  const code = await runCli(["update"], backend, ENTRIES, out, {
+    refresh: async () => ({
+      themes: ENTRIES.map((e) => e.theme),
+      source: "revalidated" as const,
+    }),
+  });
+  expect(code).toBe(0);
+  expect(text()).toMatch(/already up to date/i);
+  expect(text()).not.toMatch(/cache/i);
+});
+
+test("update that cannot reach the catalogue and has no cache exits non-zero", async () => {
+  const { backend } = fakeBackend();
+  const { out, text } = capture();
+  const code = await runCli(["update"], backend, ENTRIES, out, {
+    refresh: async () => ({
+      themes: [],
+      source: "none" as const,
+      warning: "offline",
+    }),
+  });
+  expect(code).toBe(1);
+  expect(text()).toMatch(/unavailable/i);
 });
 
 // Never apply what we failed to store.

@@ -84,7 +84,9 @@ test("a stale cache revalidates, and a 304 keeps it", async () => {
   );
 
   expect(sentEtag).toBe('W/"abc"');
-  expect(result.source).toBe("cache");
+  // A 304 means we DID ask the network and it confirmed the cache — that is
+  // "revalidated", distinct from serving the cache without asking.
+  expect(result.source).toBe("revalidated");
   expect(result.themes).toHaveLength(1);
 });
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/bumaruf/ttm-cli/compare/v0.3.0...v0.3.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **cli:** make ttm update honest — one request, and a truthful status ([#21](https://github.com/bumaruf/ttm-cli/issues/21)) ([a28e2aa](https://github.com/bumaruf/ttm-cli/commit/a28e2aaaf7c342faa9dd0bc90e7dfcd342c5c1b5))
+
 ## [0.3.0](https://github.com/bumaruf/ttm-cli/compare/v0.2.0...v0.3.0) (2026-07-15)
 
 

@@ -1,0 +1,13 @@
+name = "Flexoki Dark"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/kepano/flexoki"
+license = "MIT"
+background = "#100f0f"
+foreground = "#cecdc3"
+palette = [
+  "#1c1b1a", "#af3029", "#66800b", "#ad8301",
+  "#205ea6", "#5e409d", "#24837b", "#cecdc3",
+  "#575653", "#d14d41", "#879a39", "#d0a215",
+  "#4385be", "#ce5d97", "#3aa99f", "#f2f0e5",
+]
