@@ -239,3 +239,32 @@ test("checkCommand reinvokes bun + the script when run from source", () => {
     "__notifier-check",
   ]);
 });
+
+// runCheck must never throw, and never write junk, on any 200 that isn't a
+// clean {version: string} — these are the "background check never surfaces an
+// error" guarantees, pinned directly on runCheck.
+test("runCheck ignores a 200 whose version is not a string", async () => {
+  const fs = createMemoryFs();
+  const fetchFn = async () =>
+    new Response(JSON.stringify({ version: 123 }), { status: 200 });
+  await expect(runCheck(fetchFn, fs, ENV, 1000)).resolves.toBeUndefined();
+  expect(fs.files()[CACHE]).toBeUndefined();
+});
+
+test("runCheck ignores a 200 with a malformed JSON body", async () => {
+  const fs = createMemoryFs();
+  const fetchFn = async () => new Response("not json", { status: 200 });
+  await expect(runCheck(fetchFn, fs, ENV, 1000)).resolves.toBeUndefined();
+  expect(fs.files()[CACHE]).toBeUndefined();
+});
+
+// TTL boundary: a cache exactly 24h old is NOT fresh (< TTL is false), so it
+// schedules a check.
+test("maybeScheduleCheck treats an exactly-24h-old cache as stale", async () => {
+  const fs = createMemoryFs({
+    [CACHE]: JSON.stringify({ checkedAt: 0, latest: "0.4.0" }),
+  });
+  let spawned = false;
+  await maybeScheduleCheck(fs, ENV, () => (spawned = true), CTX, DAY);
+  expect(spawned).toBe(true);
+});
