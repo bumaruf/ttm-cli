@@ -146,3 +146,20 @@ test("an update that keeps the author passes", () => {
   const result = checkThemes([update], [existing], "@beltrano");
   expect(result.errors).toEqual([]);
 });
+
+// A renamed theme used to slip the gate completely: git reports `R088`, the CI
+// script matched neither "A" nor "M", and the file was never validated nor
+// previewed — so a theme could be moved AND edited in one commit with nobody
+// looking. The script now passes --no-renames (git then says A + D), and any
+// unrecognized status is treated as an addition rather than skipped.
+test("a renamed theme is validated as an addition, not skipped", () => {
+  const renamed: ThemeFile = {
+    path: "themes/core/nord-renamed.toml",
+    source: toml({ name: '"Nord Renamed"', foreground: '"#3a3f4b"' }),
+    status: "added", // what the CI script now produces for a rename
+  };
+  const result = checkThemes([renamed], [existing], "@beltrano");
+
+  expect(result.ok).toBe(false);
+  expect(result.errors.join("\n")).toMatch(/contrast/i);
+});

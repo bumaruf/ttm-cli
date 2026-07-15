@@ -12,7 +12,12 @@ if (!base) {
 }
 
 // Which theme files changed, and how.
-const raw = await $`git diff --name-status ${base} HEAD -- themes/`.text();
+// --no-renames makes git report a move as delete + add instead of `R`. Without
+// it, a rename slipped through the gate entirely: git reported `R088`, the loop
+// matched neither `A` nor `M`, and the theme was never validated nor previewed
+// — so a theme could be moved AND edited in one commit with the gate blind to it.
+const raw =
+  await $`git diff --name-status --no-renames ${base} HEAD -- themes/`.text();
 
 const changed: ThemeFile[] = [];
 
@@ -20,18 +25,30 @@ for (const line of raw.trim().split("\n").filter(Boolean)) {
   const [status, path] = line.split(/\s+/);
   if (!path?.endsWith(".toml")) continue;
 
-  if (status === "A") {
+  // A deleted theme has nothing left to validate.
+  if (status?.startsWith("D")) continue;
+
+  if (status?.startsWith("A")) {
     changed.push({
       path,
       source: await Bun.file(path).text(),
       status: "added",
     });
-  } else if (status === "M") {
+  } else if (status?.startsWith("M")) {
     changed.push({
       path,
       source: await Bun.file(path).text(),
       status: "modified",
       previous: await $`git show ${base}:${path}`.text(),
+    });
+  } else {
+    // Any other status is validated as an addition rather than skipped. The
+    // gate must never wave a theme through because git described the change in
+    // a way we did not anticipate.
+    changed.push({
+      path,
+      source: await Bun.file(path).text(),
+      status: "added",
     });
   }
 }
