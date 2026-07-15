@@ -1,0 +1,13 @@
+name = "One Light"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/atom/one-light-syntax"
+license = "MIT"
+background = "#fafafa"
+foreground = "#383a42"
+palette = [
+  "#383a42", "#ca1243", "#50a14f", "#c18401",
+  "#4078f2", "#a626a4", "#0184bc", "#fafafa",
+  "#a0a1a7", "#ca1243", "#50a14f", "#c18401",
+  "#4078f2", "#a626a4", "#0184bc", "#ffffff",
+]

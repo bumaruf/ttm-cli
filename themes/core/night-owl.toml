@@ -1,0 +1,13 @@
+name = "Night Owl"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/sdras/night-owl-vscode-theme"
+license = "MIT"
+background = "#011627"
+foreground = "#d6deeb"
+palette = [
+  "#011627", "#ef5350", "#22da6e", "#c5e478",
+  "#82aaff", "#c792ea", "#21c7a8", "#ffffff",
+  "#575656", "#ef5350", "#22da6e", "#ffeb95",
+  "#82aaff", "#c792ea", "#7fdbca", "#ffffff",
+]

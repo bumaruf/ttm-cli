@@ -1,0 +1,13 @@
+name = "Tomorrow Night"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/chriskempson/tomorrow-theme"
+license = "MIT"
+background = "#1d1f21"
+foreground = "#c5c8c6"
+palette = [
+  "#1d1f21", "#cc6666", "#b5bd68", "#f0c674",
+  "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
+  "#969896", "#cc6666", "#b5bd68", "#f0c674",
+  "#81a2be", "#b294bb", "#8abeb7", "#ffffff",
+]

@@ -1,0 +1,13 @@
+name = "Catppuccin Latte"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/catppuccin/catppuccin"
+license = "MIT"
+background = "#eff1f5"
+foreground = "#4c4f69"
+palette = [
+  "#acb0be", "#d20f39", "#40a02b", "#df8e1d",
+  "#1e66f5", "#ea76cb", "#179299", "#5c5f77",
+  "#9ca0b0", "#d20f39", "#40a02b", "#df8e1d",
+  "#1e66f5", "#ea76cb", "#179299", "#6c6f85",
+]

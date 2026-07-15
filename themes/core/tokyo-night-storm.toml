@@ -1,0 +1,13 @@
+name = "Tokyo Night Storm"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/folke/tokyonight.nvim"
+license = "Apache-2.0"
+background = "#24283b"
+foreground = "#c0caf5"
+palette = [
+  "#414868", "#f7768e", "#9ece6a", "#e0af68",
+  "#7aa2f7", "#bb9af7", "#7dcfff", "#a9b1d6",
+  "#565f89", "#f7768e", "#9ece6a", "#e0af68",
+  "#7aa2f7", "#bb9af7", "#7dcfff", "#c0caf5",
+]
