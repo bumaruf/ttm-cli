@@ -1,0 +1,13 @@
+name = "Poimandres"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/drcmda/poimandres-theme"
+license = "MIT"
+background = "#1b1e28"
+foreground = "#a6accd"
+palette = [
+  "#303340", "#d0679d", "#5de4c7", "#fffac2",
+  "#add7ff", "#fae4fc", "#89ddff", "#a6accd",
+  "#767c9d", "#d0679d", "#5de4c7", "#fffac2",
+  "#add7ff", "#fae4fc", "#89ddff", "#e4f0fb",
+]
