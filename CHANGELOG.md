@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/bumaruf/ttm-cli/compare/v0.3.1...v0.4.0) (2026-07-15)
+
+
+### Features
+
+* add a pack of 20 bundled themes ([#23](https://github.com/bumaruf/ttm-cli/issues/23)) ([77e2b51](https://github.com/bumaruf/ttm-cli/commit/77e2b51b0e2cdf9f17b58d5aaef3de26f4002cde))
+* notify when a new version is available ([#31](https://github.com/bumaruf/ttm-cli/issues/31)) ([7da2a0b](https://github.com/bumaruf/ttm-cli/commit/7da2a0bd2345e9017d4f638200ee41fd24a1d2a7))
+
+
+### Bug Fixes
+
+* **ci:** slugify theme paths with accent stripping so accented names don't false-collide ([#29](https://github.com/bumaruf/ttm-cli/issues/29)) ([b3e0f69](https://github.com/bumaruf/ttm-cli/commit/b3e0f697cd85fbd21d04eb8dbe2f3d3d6e6b0823))
+
 ## [0.3.1](https://github.com/bumaruf/ttm-cli/compare/v0.3.0...v0.3.1) (2026-07-15)
 
 
