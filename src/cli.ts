@@ -158,6 +158,7 @@ export async function runCli(
 }
 
 import { dirname, join } from "node:path";
+import pkg from "../package.json";
 import { createAlacrittyBackend } from "./backends/alacritty";
 import { createGnomeBackend, realRun } from "./backends/gnome";
 import { createIterm2Backend } from "./backends/iterm2";
@@ -170,7 +171,26 @@ import { fetchCatalogue } from "./catalogue/remote";
 import { loadThemes } from "./core/theme";
 import { BUILTIN_THEMES } from "./generated/builtin-themes";
 import { realFs } from "./platform/fs";
+import {
+  maybeScheduleCheck,
+  readNotice,
+  runCheck,
+} from "./platform/update-notifier";
 import { runTui } from "./tui/loop";
+
+/** Bun.spawn's the child detached, ignoring stdio, and never throws. */
+function spawnDetached(cmd: string[]): void {
+  try {
+    const child = Bun.spawn(cmd, {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    child.unref();
+  } catch {
+    // Scheduling a background check must never break the actual command.
+  }
+}
 
 /**
  * Resolve the theme catalogue, in order:
@@ -197,6 +217,14 @@ export async function resolveThemes(
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
+
+  // Hidden subcommand run by the detached background check. Never printed,
+  // never advertised in --help, handled before anything else touches a
+  // backend or the catalogue.
+  if (argv[0] === "__notifier-check") {
+    await runCheck(fetch, realFs, process.env, Date.now());
+    process.exit(0);
+  }
 
   // `--backend <id>` can appear anywhere; strip it from argv before parsing
   // the rest of the command line.
@@ -234,6 +262,25 @@ if (import.meta.main) {
   }
 
   const backend = selection.backend;
+
+  const notifierCtx = {
+    runningVersion: pkg.version,
+    mainPath: Bun.main,
+    execPath: process.execPath,
+    platform: process.platform,
+  };
+  let updateNotice: string | null = null;
+  if (process.stdout.isTTY) {
+    await maybeScheduleCheck(
+      realFs,
+      process.env,
+      spawnDetached,
+      notifierCtx,
+      Date.now(),
+    );
+    updateNotice = await readNotice(realFs, process.env, notifierCtx);
+  }
+
   const builtin = await resolveThemes();
 
   if (builtin.length === 0) {
@@ -280,6 +327,7 @@ if (import.meta.main) {
       }
       console.log(`applied ${applied.name}`);
     }
+    if (updateNotice) console.error(updateNotice);
     process.exit(0);
   }
 
@@ -290,5 +338,6 @@ if (import.meta.main) {
     (s) => console.log(s),
     deps,
   );
+  if (updateNotice) console.error(updateNotice);
   process.exit(code);
 }
