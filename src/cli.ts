@@ -79,8 +79,24 @@ export async function runCli(
 
     case "update": {
       const result = await refresh();
-      if (result.warning) out(`warning: ${result.warning}`);
-      out(`catalogue: ${result.themes.length} themes (${result.source})`);
+      if (result.warning) {
+        out(`warning: ${result.warning}`);
+      }
+      const n = result.themes.length;
+      switch (result.source) {
+        case "network":
+          out(`catalogue updated: ${n} themes`);
+          break;
+        case "revalidated":
+          out(`catalogue already up to date: ${n} themes`);
+          break;
+        case "cache":
+          out(`catalogue (cached): ${n} themes`);
+          break;
+        case "none":
+          out("catalogue unavailable");
+          return 1;
+      }
       return 0;
     }
 
@@ -227,8 +243,15 @@ if (import.meta.main) {
     process.exit(1);
   }
 
+  // `update` does its own forced refresh, so the startup fetch would be a
+  // second, redundant request to the same URL — and it would warm the cache,
+  // making update's forced fetch see a fresh cache and report "revalidated"
+  // even on a cold start. Skip it: update builds no merged catalogue anyway.
+  const wantsRemote = argv[0] !== "update";
+
+  const skipped: RemoteResult = { themes: [], source: "none" };
   const [remote, installed] = await Promise.all([
-    fetchCatalogue(realFs, fetch, process.env),
+    wantsRemote ? fetchCatalogue(realFs, fetch, process.env) : skipped,
     loadInstalled(realFs, process.env),
   ]);
 
