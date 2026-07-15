@@ -2,8 +2,11 @@ import { expect, test } from "bun:test";
 import { createMemoryFs } from "../../src/platform/fs";
 import {
   cacheFile,
+  checkCommand,
   detectChannel,
+  maybeScheduleCheck,
   readNotice,
+  runCheck,
   updateCommand,
 } from "../../src/platform/update-notifier";
 
@@ -133,4 +136,106 @@ test("cacheFile honours XDG_CACHE_HOME", () => {
   expect(cacheFile({ HOME: "/home/me", XDG_CACHE_HOME: "/x" })).toBe(
     "/x/ttm/update.json",
   );
+});
+
+const DAY = 24 * 60 * 60 * 1000;
+
+test("runCheck stores the latest version from the registry", async () => {
+  const fs = createMemoryFs();
+  const fetchFn = async () =>
+    new Response(JSON.stringify({ version: "0.6.0" }), { status: 200 });
+  await runCheck(fetchFn, fs, ENV, 1000);
+
+  const meta = JSON.parse(fs.files()[CACHE]!);
+  expect(meta.latest).toBe("0.6.0");
+  expect(meta.checkedAt).toBe(1000);
+});
+
+test("runCheck never throws on a network error, and writes nothing", async () => {
+  const fs = createMemoryFs();
+  const fetchFn = async () => {
+    throw new Error("offline");
+  };
+  await expect(runCheck(fetchFn, fs, ENV, 1000)).resolves.toBeUndefined();
+  expect(fs.files()[CACHE]).toBeUndefined();
+});
+
+test("runCheck ignores a non-200 response", async () => {
+  const fs = createMemoryFs();
+  const fetchFn = async () => new Response("nope", { status: 500 });
+  await runCheck(fetchFn, fs, ENV, 1000);
+  expect(fs.files()[CACHE]).toBeUndefined();
+});
+
+// The whole point: browsing must not wait on the network. A fresh cache does
+// not spawn anything.
+test("maybeScheduleCheck does nothing when the cache is fresh", async () => {
+  const fs = createMemoryFs({
+    [CACHE]: JSON.stringify({ checkedAt: 5 * DAY, latest: "0.4.0" }),
+  });
+  let spawned = false;
+  await maybeScheduleCheck(
+    fs,
+    ENV,
+    () => (spawned = true),
+    CTX,
+    5 * DAY + 1000,
+  );
+  expect(spawned).toBe(false);
+});
+
+test("maybeScheduleCheck spawns the detached check when the cache is stale", async () => {
+  const fs = createMemoryFs({
+    [CACHE]: JSON.stringify({ checkedAt: 0, latest: "0.4.0" }),
+  });
+  let cmd: string[] | null = null;
+  await maybeScheduleCheck(fs, ENV, (c) => (cmd = c), CTX, 2 * DAY);
+  expect(cmd).not.toBeNull();
+  expect(cmd!).toContain("__notifier-check");
+});
+
+test("maybeScheduleCheck spawns when there is no cache at all", async () => {
+  let spawned = false;
+  await maybeScheduleCheck(
+    createMemoryFs(),
+    ENV,
+    () => (spawned = true),
+    CTX,
+    DAY,
+  );
+  expect(spawned).toBe(true);
+});
+
+test("guards suppress scheduling", async () => {
+  let spawned = false;
+  await maybeScheduleCheck(
+    createMemoryFs(),
+    { ...ENV, CI: "true" },
+    () => (spawned = true),
+    CTX,
+    DAY,
+  );
+  expect(spawned).toBe(false);
+});
+
+test("checkCommand reinvokes the binary itself when compiled", () => {
+  const cmd = checkCommand({
+    ...CTX,
+    mainPath: "/$bunfs/root/cli.ts",
+    execPath: "/usr/bin/ttm",
+  });
+  expect(cmd).toEqual(["/usr/bin/ttm", "__notifier-check"]);
+});
+
+test("checkCommand reinvokes bun + the script when run from source", () => {
+  const cmd = checkCommand({
+    ...CTX,
+    mainPath: "/pkg/src/cli.ts",
+    execPath: "/home/me/.bun/bin/bun",
+  });
+  expect(cmd).toEqual([
+    "/home/me/.bun/bin/bun",
+    "/pkg/src/cli.ts",
+    "__notifier-check",
+  ]);
 });

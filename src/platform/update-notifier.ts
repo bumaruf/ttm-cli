@@ -80,3 +80,65 @@ export async function readNotice(
   const channel = detectChannel(ctx.mainPath, ctx.execPath, ctx.platform);
   return `${DIM}update available: ${ctx.runningVersion} → ${latest} · run ${updateCommand(channel)}${RESET}`;
 }
+
+export type Fetch = (url: string) => Promise<Response>;
+export type Spawn = (cmd: string[]) => void;
+
+export const REGISTRY_URL =
+  "https://registry.npmjs.org/@bumaruf/ttm-cli/latest";
+
+const TTL_MS = 24 * 60 * 60 * 1000;
+
+/** The command a detached child runs to refresh the cache. */
+export function checkCommand(ctx: NoticeContext): string[] {
+  const compiled = ctx.mainPath.includes("$bunfs");
+  return compiled
+    ? [ctx.execPath, "__notifier-check"]
+    : [ctx.execPath, ctx.mainPath, "__notifier-check"];
+}
+
+/** Runs in the detached child. Fetches the registry, writes the cache. Silent. */
+export async function runCheck(
+  fetchFn: Fetch,
+  fs: Fs,
+  env: Env,
+  now: number,
+): Promise<void> {
+  try {
+    const response = await fetchFn(REGISTRY_URL);
+    if (!response.ok) return;
+    const body = (await response.json()) as { version: unknown };
+    const latest = body.version;
+    if (typeof latest !== "string") return;
+    await fs.writeFile(
+      cacheFile(env),
+      `${JSON.stringify({ checkedAt: now, latest })}\n`,
+    );
+  } catch {
+    // Silent by design: a background check must never surface an error.
+  }
+}
+
+async function cacheAgeOk(fs: Fs, env: Env, now: number): Promise<boolean> {
+  const path = cacheFile(env);
+  if (!(await fs.exists(path))) return false;
+  try {
+    const checkedAt = JSON.parse(await fs.readFile(path)).checkedAt;
+    return typeof checkedAt === "number" && now - checkedAt < TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+/** Spawns the detached check if the cache is missing or older than the TTL. */
+export async function maybeScheduleCheck(
+  fs: Fs,
+  env: Env,
+  spawn: Spawn,
+  ctx: NoticeContext,
+  now: number,
+): Promise<void> {
+  if (suppressed(env)) return;
+  if (await cacheAgeOk(fs, env, now)) return;
+  spawn(checkCommand(ctx));
+}
