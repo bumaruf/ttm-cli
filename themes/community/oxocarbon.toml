@@ -1,0 +1,13 @@
+name = "Oxocarbon"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/nyoom-engineering/oxocarbon"
+license = "MIT"
+background = "#161616"
+foreground = "#f2f4f8"
+palette = [
+  "#262626", "#ee5396", "#42be65", "#ffe97b",
+  "#33b1ff", "#ff7eb6", "#3ddbd9", "#dde1e6",
+  "#393939", "#ee5396", "#42be65", "#ffe97b",
+  "#33b1ff", "#ff7eb6", "#3ddbd9", "#f2f4f8",
+]
