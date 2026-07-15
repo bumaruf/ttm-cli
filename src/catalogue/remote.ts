@@ -13,7 +13,12 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface RemoteResult {
   themes: Theme[];
-  source: "network" | "cache" | "none";
+  // "network"     — downloaded fresh content (HTTP 200)
+  // "revalidated" — asked the network, it confirmed our cache is current (304)
+  // "cache"       — served the cache without asking the network (fresh TTL, or
+  //                 offline fallback)
+  // "none"        — no cache and the network was unreachable
+  source: "network" | "revalidated" | "cache" | "none";
   warning?: string;
 }
 
@@ -53,7 +58,7 @@ export async function fetchCatalogue(
 
     if (response.status === 304 && cached) {
       await writeMeta(fs, metaPath, { etag: cached.meta.etag, fetchedAt: now });
-      return { themes: cached.themes, source: "cache" };
+      return { themes: cached.themes, source: "revalidated" };
     }
 
     if (!response.ok) {
