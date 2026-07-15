@@ -33,6 +33,6 @@ jobs:
       # Reviewing a color by reading hex is exactly what this project abolishes.
       - name: post the preview
         if: success()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           path: theme-preview.md
