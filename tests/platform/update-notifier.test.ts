@@ -268,3 +268,31 @@ test("maybeScheduleCheck treats an exactly-24h-old cache as stale", async () => 
   await maybeScheduleCheck(fs, ENV, () => (spawned = true), CTX, DAY);
   expect(spawned).toBe(true);
 });
+
+// The contract is "never crash the command". Bun's fs.exists can REJECT (not
+// just resolve false) on some filesystem errors (e.g. EACCES/ENOTDIR). Both
+// readNotice and maybeScheduleCheck must degrade to silence, not let the
+// rejection escape.
+function brokenExistsFs() {
+  const fs = createMemoryFs();
+  return {
+    ...fs,
+    exists: async () => {
+      throw new Error("EACCES");
+    },
+  };
+}
+
+test("readNotice is silent when fs.exists rejects", async () => {
+  await expect(readNotice(brokenExistsFs(), ENV, CTX)).resolves.toBeNull();
+});
+
+test("maybeScheduleCheck never throws when fs.exists rejects", async () => {
+  let spawned = false;
+  await expect(
+    maybeScheduleCheck(brokenExistsFs(), ENV, () => (spawned = true), CTX, DAY),
+  ).resolves.toBeUndefined();
+  // cacheAgeOk treats the failure as stale, so a spawn attempt is fine — the
+  // spawn itself is try/catch-wrapped in cli.ts. What matters is no throw.
+  expect(spawned).toBe(true);
+});

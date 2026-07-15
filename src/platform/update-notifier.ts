@@ -64,10 +64,9 @@ export async function readNotice(
   if (suppressed(env)) return null;
 
   const path = cacheFile(env);
-  if (!(await fs.exists(path))) return null;
-
   let latest: string;
   try {
+    if (!(await fs.exists(path))) return null;
     latest = JSON.parse(await fs.readFile(path)).latest;
   } catch {
     return null;
@@ -121,8 +120,8 @@ export async function runCheck(
 
 async function cacheAgeOk(fs: Fs, env: Env, now: number): Promise<boolean> {
   const path = cacheFile(env);
-  if (!(await fs.exists(path))) return false;
   try {
+    if (!(await fs.exists(path))) return false;
     const checkedAt = JSON.parse(await fs.readFile(path)).checkedAt;
     return typeof checkedAt === "number" && now - checkedAt < TTL_MS;
   } catch {
