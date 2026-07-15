@@ -1,0 +1,13 @@
+name = "Oceanic Next"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/voronianski/oceanic-next-color-scheme"
+license = "unlicensed"
+background = "#1b2b34"
+foreground = "#c0c5ce"
+palette = [
+  "#1b2b34", "#ec5f67", "#99c794", "#fac863",
+  "#6699cc", "#c594c5", "#5fb3b3", "#c0c5ce",
+  "#65737e", "#ec5f67", "#99c794", "#fac863",
+  "#6699cc", "#c594c5", "#5fb3b3", "#d8dee9",
+]

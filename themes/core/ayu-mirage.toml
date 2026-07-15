@@ -1,0 +1,13 @@
+name = "Ayu Mirage"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/ayu-theme/ayu-colors"
+license = "MIT"
+background = "#212733"
+foreground = "#cbccc6"
+palette = [
+  "#171b24", "#ff3333", "#b8cc52", "#e7c547",
+  "#73d0ff", "#dfbfff", "#95e6cb", "#cbccc6",
+  "#323232", "#f2777a", "#b8cc52", "#ffee99",
+  "#73d0ff", "#dfbfff", "#95e6cb", "#ffffff",
+]

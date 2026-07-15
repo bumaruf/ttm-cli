@@ -1,0 +1,13 @@
+name = "Rosé Pine Dawn"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://rosepinetheme.com/palette/"
+license = "MIT"
+background = "#faf4ed"
+foreground = "#575279"
+palette = [
+  "#fffaf3", "#b4637a", "#286983", "#ea9d34",
+  "#56949f", "#907aa9", "#d7827e", "#575279",
+  "#9893a5", "#b4637a", "#286983", "#ea9d34",
+  "#56949f", "#907aa9", "#d7827e", "#575279",
+]
