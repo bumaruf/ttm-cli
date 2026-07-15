@@ -1,0 +1,13 @@
+name = "Modus Vivendi"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/protesilaos/modus-themes"
+license = "GPL-3.0"
+background = "#000000"
+foreground = "#ffffff"
+palette = [
+  "#000000", "#ff8059", "#44bc44", "#d0bc00",
+  "#2fafff", "#feacd0", "#00d3d0", "#989898",
+  "#595959", "#ef8b50", "#70b900", "#c0c530",
+  "#79a8ff", "#f78fe7", "#4ae2e2", "#ffffff",
+]
