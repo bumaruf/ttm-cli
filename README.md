@@ -167,6 +167,14 @@ export interface Backend {
 
 Nothing else in the codebase needs to change — the picker, the live preview, and the theme format are all backend-agnostic.
 
+### Updates
+
+`ttm` periodically checks for a new version in the background (throttled to once per 24 hours) and prints a one-line notice to let you know when an update is available. The notice includes the right command for how you installed it — `npm i -g @bumaruf/ttm-cli` if you used npm, a download link if you used the binary, or `sudo apt upgrade ttm` if you used the `.deb`. It never installs anything on its own.
+
+To disable the check, set `TTM_NO_UPDATE_CHECK=1` in your environment.
+
+Note: new **themes** arrive automatically via `ttm update` without needing to update `ttm` itself — the update notifier only matters when there are changes to the tool's code.
+
 ## 🔥 Contribute
 
 **Adding a theme needs no code at all**: copy `themes/core/nord.toml` into `themes/community/`, change the colors, open a PR. That's the whole contribution — once merged, CI republishes the catalogue and it shows up in everyone's picker with no `ttm` release.

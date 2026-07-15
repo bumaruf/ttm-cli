@@ -182,6 +182,13 @@ test("apply of a remote theme installs it first, and aborts if that fails", asyn
   expect(text()).toMatch(/disk full/);
 });
 
+test("the hidden notifier subcommand is not advertised in help", async () => {
+  const { backend } = fakeBackend();
+  const { out, text } = capture();
+  await runCli(["--help"], backend, ENTRIES, out);
+  expect(text()).not.toContain("__notifier-check");
+});
+
 test("apply of a remote theme installs it, then applies it", async () => {
   const { backend, applied } = fakeBackend();
   const { out } = capture();
