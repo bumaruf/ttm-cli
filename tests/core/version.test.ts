@@ -25,3 +25,12 @@ test("garbage never reports an update", () => {
   expect(isNewer("", "")).toBe(false);
   expect(isNewer("1.2", "1.1.9")).toBe(false); // not x.y.z
 });
+
+test("malformed segments never report an update", () => {
+  expect(isNewer("1..3", "1.0.2")).toBe(false); // empty segment
+  expect(isNewer("1.2.-3", "1.1.9")).toBe(false); // negative sign in segment
+  expect(isNewer("1. 2.3", "1.1.9")).toBe(false); // embedded whitespace
+  expect(isNewer("01.2.3", "1.1.9")).toBe(false); // leading zero
+  expect(isNewer("v1.2.3", "1.1.9")).toBe(false); // non-digit prefix
+  expect(isNewer("1.2.3.4", "1.1.9")).toBe(false); // too many segments
+});

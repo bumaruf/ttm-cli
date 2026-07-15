@@ -9,8 +9,9 @@ function parse(
 
   const parts = core.split(".");
   if (parts.length !== 3) return null;
+  const segmentPattern = /^(0|[1-9]\d*)$/;
+  if (!parts.every((p) => segmentPattern.test(p))) return null;
   const nums = parts.map((p) => Number(p));
-  if (nums.some((n) => !Number.isInteger(n) || n < 0)) return null;
   return { nums: nums as [number, number, number], pre };
 }
 
