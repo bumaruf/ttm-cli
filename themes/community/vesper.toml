@@ -1,0 +1,13 @@
+name = "Vesper"
+author = "@bumaruf"
+contributor = "@bumaruf"
+source = "https://github.com/raunofreiberg/vesper"
+license = "MIT"
+background = "#101010"
+foreground = "#ffffff"
+palette = [
+  "#101010", "#ff8080", "#99ffe4", "#ffc799",
+  "#99ffe4", "#ffc799", "#99ffe4", "#a0a0a0",
+  "#4d4d4d", "#ff8080", "#99ffe4", "#ffc799",
+  "#99ffe4", "#ffc799", "#99ffe4", "#ffffff",
+]
