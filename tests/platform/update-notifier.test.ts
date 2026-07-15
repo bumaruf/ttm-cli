@@ -83,6 +83,20 @@ test("a corrupt cache is silent", async () => {
   expect(await readNotice(fs, ENV, CTX)).toBeNull();
 });
 
+// Valid JSON, but `latest` is the wrong shape (a number, or missing). The type
+// guard must yield null, not throw — a hand-mangled cache can't crash the CLI.
+test("a cache with a non-string latest is silent, not a crash", async () => {
+  const numberLatest = createMemoryFs({
+    [CACHE]: JSON.stringify({ checkedAt: 1, latest: 500 }),
+  });
+  expect(await readNotice(numberLatest, ENV, CTX)).toBeNull();
+
+  const missingLatest = createMemoryFs({
+    [CACHE]: JSON.stringify({ checkedAt: 1 }),
+  });
+  expect(await readNotice(missingLatest, ENV, CTX)).toBeNull();
+});
+
 test("the deb channel shows the apt command", async () => {
   const fs = createMemoryFs({
     [CACHE]: JSON.stringify({ checkedAt: 1, latest: "0.5.0" }),
