@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.14
+          bun-version: 1.4.3
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.14
+          bun-version: 1.4.3
       - run: bun install --frozen-lockfile
 
       # Coverage is reported, not gated.
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.14
+          bun-version: 1.4.3
       - run: bun install --frozen-lockfile
       - run: bun test
       - name: the CLI must run from source
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.14
+          bun-version: 1.4.3
       - run: bun install --frozen-lockfile
       - run: bun test
       - name: the CLI must run from source
